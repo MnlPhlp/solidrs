@@ -3,9 +3,14 @@ pub struct Element(pub(crate) InnerElement);
 #[derive(Clone)]
 pub(crate) enum InnerElement {
     Cube {
-        x: u32,
-        y: u32,
-        z: u32,
+        x: i32,
+        y: i32,
+        z: i32,
+        centered: bool,
+    },
+    Square {
+        x: i32,
+        y: i32,
         centered: bool,
     },
     Union {
@@ -15,9 +20,19 @@ pub(crate) enum InnerElement {
         children: Vec<InnerElement>,
     },
     Translate {
-        x: u32,
-        y: u32,
-        z: u32,
+        x: i32,
+        y: i32,
+        z: i32,
+        child: Box<InnerElement>,
+    },
+    Rotate {
+        x: i32,
+        y: i32,
+        z: i32,
+        child: Box<InnerElement>,
+    },
+    RotateExtrude {
+        angle: i32,
         child: Box<InnerElement>,
     },
 }
