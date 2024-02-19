@@ -51,4 +51,12 @@ pub(crate) enum InnerElement<'a> {
         angle: Val<'a>,
         child: Box<InnerElement<'a>>,
     },
+    Fa {
+        fa: Val<'a>,
+        child: Box<InnerElement<'a>>,
+    },
+    Fs {
+        fs: Val<'a>,
+        child: Box<InnerElement<'a>>,
+    },
 }

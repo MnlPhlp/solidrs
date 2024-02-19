@@ -92,7 +92,9 @@ impl Writer {
             InnerElement::Rotate { x, y, z, child } => {
                 self.render_transform("rotate", *x, *y, *z, child);
             }
-            InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(*angle, child),
+            InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(angle, child),
+            InnerElement::Fa { fa, child } => self.render_config_param("fa", fa, child),
+            InnerElement::Fs { fs, child } => self.render_config_param("fs", fs, child),
         }
     }
 
@@ -137,13 +139,18 @@ impl Writer {
         renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
-    fn render_rot_ext(&mut self, angle: Val, child: &InnerElement) {
+    fn render_rot_ext(&mut self, angle: &Val, child: &InnerElement) {
         render!(self, "rotate_extrude(angle={angle})");
         self.render_child(child);
     }
 
     fn render_cylinder(&mut self, r: Val, h: Val, centered: bool) {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
+    }
+
+    fn render_config_param(&mut self, name: &str, val: &Val<'_>, child: &InnerElement<'_>) {
+        renderln!(self, "${name} = {val};");
+        self.render(child);
     }
 
     fn render_vars(&mut self, element: &InnerElement) {
@@ -173,8 +180,10 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement)
             add_vars(map, &[x, y, z]);
             collect_vars(map, child);
         }
-        InnerElement::RotateExtrude { angle, child } => {
-            add_vars(map, &[angle]);
+        InnerElement::RotateExtrude { angle: val, child }
+        | InnerElement::Fs { fs: val, child }
+        | InnerElement::Fa { fa: val, child } => {
+            add_vars(map, &[val]);
             collect_vars(map, child);
         }
     }
