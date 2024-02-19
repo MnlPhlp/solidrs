@@ -2,23 +2,26 @@ use crate::{
     element::{Element, InnerElement},
     var::{Val, Var},
 };
-use std::{collections::HashMap, fmt::Write};
+use std::{collections::HashMap, fmt::Write, path::Path};
 
-pub trait ExportScad: Sized {
+pub trait Export: Sized {
     fn render_scad(self) -> String;
 
     fn save_as_scad(self, name: &str) {
-        let name = if name.ends_with(".scad") {
+        let is_scad = Path::new(name)
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("scad"));
+        let name = if is_scad {
             String::from(name)
         } else {
             format!("{name}.scad")
         };
         let rendered = self.render_scad();
-        std::fs::write(name, rendered).unwrap()
+        std::fs::write(name, rendered).unwrap();
     }
 }
 
-impl ExportScad for &Element<'_> {
+impl Export for &Element<'_> {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render_vars(&self.0);
@@ -27,7 +30,7 @@ impl ExportScad for &Element<'_> {
     }
 }
 
-impl<'a, COLLECTION: IntoIterator<Item = &'a Element<'a>>> ExportScad for COLLECTION {
+impl<'a, COLLECTION: IntoIterator<Item = &'a Element<'a>>> Export for COLLECTION {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         for element in self {
@@ -84,10 +87,10 @@ impl Writer {
             InnerElement::Union { children } => self.render_union(children),
             InnerElement::Diff { children } => self.render_diff(children),
             InnerElement::Translate { x, y, z, child } => {
-                self.render_transform("translate", *x, *y, *z, child)
+                self.render_transform("translate", *x, *y, *z, child);
             }
             InnerElement::Rotate { x, y, z, child } => {
-                self.render_transform("rotate", *x, *y, *z, child)
+                self.render_transform("rotate", *x, *y, *z, child);
             }
             InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(*angle, child),
         }
@@ -116,7 +119,7 @@ impl Writer {
         renderln_no_indent!(self, "{{");
         self.indent += 1;
         for child in children {
-            self.render(child)
+            self.render(child);
         }
         self.indent -= 1;
         renderln!(self, "}}");
@@ -140,7 +143,7 @@ impl Writer {
     }
 
     fn render_cylinder(&mut self, r: Val, h: Val, centered: bool) {
-        renderln!(self, "cylinder({h}, r = {r}{});", center(centered))
+        renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
     }
 
     fn render_vars(&mut self, element: &InnerElement) {
@@ -152,7 +155,7 @@ impl Writer {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
             }
-            renderln!(self, "{} = {};", var.get_name(), var.get_val())
+            renderln!(self, "{} = {};", var.get_name(), var.get_val());
         }
     }
 }
@@ -163,19 +166,16 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement)
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
         InnerElement::Cylinder { h, r, .. } => add_vars(map, &[h, r]),
         InnerElement::Square { x, y, .. } => add_vars(map, &[x, y]),
-        InnerElement::Union { children } => children.iter().for_each(|c| collect_vars(map, c)),
-        InnerElement::Diff { children } => children.iter().for_each(|c| collect_vars(map, c)),
-        InnerElement::Translate { x, y, z, child } => {
-            add_vars(map, &[x, y, z]);
-            collect_vars(map, child)
+        InnerElement::Union { children } | InnerElement::Diff { children } => {
+            children.iter().for_each(|c| collect_vars(map, c));
         }
-        InnerElement::Rotate { x, y, z, child } => {
+        InnerElement::Translate { x, y, z, child } | InnerElement::Rotate { x, y, z, child } => {
             add_vars(map, &[x, y, z]);
-            collect_vars(map, child)
+            collect_vars(map, child);
         }
         InnerElement::RotateExtrude { angle, child } => {
             add_vars(map, &[angle]);
-            collect_vars(map, child)
+            collect_vars(map, child);
         }
     }
 }

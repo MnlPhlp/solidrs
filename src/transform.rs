@@ -4,6 +4,7 @@ use crate::{
 };
 
 impl<'a> Element<'a> {
+    #[must_use]
     pub fn translate(self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
         let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match self.0 {
@@ -28,6 +29,7 @@ impl<'a> Element<'a> {
         Element(inner)
     }
 
+    #[must_use]
     pub fn rotate(self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
         let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match self.0 {

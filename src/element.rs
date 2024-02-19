@@ -4,6 +4,7 @@ use crate::var::Val;
 pub struct Element<'a>(pub(crate) InnerElement<'a>);
 
 impl Element<'_> {
+    #[must_use]
     pub fn empty() -> Self {
         Self(InnerElement::Empty)
     }

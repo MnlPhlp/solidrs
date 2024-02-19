@@ -41,6 +41,7 @@ impl<'a> Arg<'a> for f32 {
     }
 }
 impl<'a> Arg<'a> for i32 {
+    #[allow(clippy::cast_precision_loss)]
     fn f32(&self) -> f32 {
         *self as f32
     }
@@ -53,6 +54,7 @@ pub struct Var {
     val: f32,
 }
 impl Var {
+    #[must_use]
     pub fn new(name: &'static str, val: f32) -> Var {
         Self {
             name,
@@ -60,16 +62,17 @@ impl Var {
             val,
         }
     }
+    #[must_use]
     pub fn commented(name: &'static str, comment: &'static str, val: f32) -> Var {
         Self { name, comment, val }
     }
-    pub fn get_comment(&self) -> &'static str {
+    pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
     }
-    pub fn get_name(&self) -> &'static str {
+    pub(crate) fn get_name(&self) -> &'static str {
         self.name
     }
-    pub fn get_val(&self) -> f32 {
+    pub(crate) fn get_val(&self) -> f32 {
         self.val
     }
 }

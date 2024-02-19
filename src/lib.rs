@@ -10,7 +10,7 @@ mod transform;
 mod var;
 
 pub use element::Element;
-pub use scad::ExportScad;
+pub use scad::Export;
 pub use shapes2d::*;
 pub use shapes3d::*;
 pub use var::{Arg, Val, Var};
