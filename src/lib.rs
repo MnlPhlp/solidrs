@@ -4,6 +4,8 @@ mod modify;
 mod scad;
 mod shapes2d;
 mod shapes3d;
+#[cfg(test)]
+mod tests;
 mod transform;
 mod var;
 

@@ -1,3 +1,4 @@
 /target
 Cargo.lock
 *.scad
+!test_output/*.scad
