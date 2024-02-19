@@ -9,6 +9,11 @@ impl Element {
                 z: *z,
                 centered: true,
             },
+            InnerElement::Cylinder { h, r, .. } => InnerElement::Cylinder {
+                h: *h,
+                r: *r,
+                centered: true,
+            },
             // ToDo fix this with types to not allow invalid calls
             other => panic!("center() is not allowed for type {other}"),
         };
