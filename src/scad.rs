@@ -1,8 +1,10 @@
 use crate::element::{Element, InnerElement};
 use std::fmt::Write;
 
-impl Element {
-    pub fn save_as_scad(&self, name: &str) {
+pub trait ExportScad: Sized {
+    fn render_scad(self) -> String;
+
+    fn save_as_scad(self, name: &str) {
         let name = if name.ends_with(".scad") {
             String::from(name)
         } else {
@@ -11,10 +13,22 @@ impl Element {
         let rendered = self.render_scad();
         std::fs::write(name, rendered).unwrap()
     }
+}
 
-    pub fn render_scad(&self) -> String {
+impl ExportScad for &Element {
+    fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render(&self.0);
+        w.str
+    }
+}
+
+impl<'a, COLLECTION: IntoIterator<Item = &'a Element>> ExportScad for COLLECTION {
+    fn render_scad(self) -> String {
+        let mut w = Writer::new();
+        for element in self {
+            w.render(&element.0);
+        }
         w.str
     }
 }
@@ -58,7 +72,9 @@ impl Writer {
 
     fn render(&mut self, root: &InnerElement) {
         match root {
+            InnerElement::Empty => {}
             InnerElement::Cube { x, y, z, centered } => self.render_cube(*x, *y, *z, *centered),
+            InnerElement::Cylinder { h, r, centered } => self.render_cylinder(*r, *h, *centered),
             InnerElement::Square { x, y, centered } => self.render_square(*x, *y, *centered),
             InnerElement::Union { children } => self.render_union(children),
             InnerElement::Diff { children } => self.render_diff(children),
@@ -72,11 +88,11 @@ impl Writer {
         }
     }
 
-    fn render_cube(&mut self, x: i32, y: i32, z: i32, centered: bool) {
-        renderln!(self, "cube([{x},{y},{z}],center = {centered});",);
+    fn render_cube(&mut self, x: f32, y: f32, z: f32, centered: bool) {
+        renderln!(self, "cube([{x},{y},{z}]{});", center(centered));
     }
 
-    fn render_transform(&mut self, transform: &str, x: i32, y: i32, z: i32, child: &InnerElement) {
+    fn render_transform(&mut self, transform: &str, x: f32, y: f32, z: f32, child: &InnerElement) {
         render!(self, "{transform}([{x},{y},{z}])");
         self.render_child(child);
     }
@@ -109,12 +125,24 @@ impl Writer {
         renderln!(self, "}}");
     }
 
-    fn render_square(&mut self, x: i32, y: i32, centered: bool) {
-        renderln!(self, "square([{x},{y}],center = {centered});",);
+    fn render_square(&mut self, x: f32, y: f32, centered: bool) {
+        renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
-    fn render_rot_ext(&mut self, angle: i32, child: &InnerElement) {
+    fn render_rot_ext(&mut self, angle: f32, child: &InnerElement) {
         render!(self, "rotate_extrude(angle={angle})");
         self.render_child(child);
+    }
+
+    fn render_cylinder(&mut self, r: f32, h: f32, centered: bool) {
+        renderln!(self, "cylinder({h}, r = {r}{});", center(centered))
+    }
+}
+
+fn center(c: bool) -> &'static str {
+    if c {
+        ",center = true"
+    } else {
+        ""
     }
 }

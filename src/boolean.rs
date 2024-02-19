@@ -45,9 +45,27 @@ impl std::ops::Add for Element {
     }
 }
 
+impl<RHS: Iterator<Item = Element>> std::ops::Add<RHS> for Element {
+    type Output = Self;
+
+    fn add(mut self, rhs: RHS) -> Self::Output {
+        for e in rhs {
+            self += e;
+        }
+        self
+    }
+}
+
 impl std::ops::AddAssign for Element {
     fn add_assign(&mut self, rhs: Self) {
         self.0 = self.0.clone() + rhs.0
+    }
+}
+impl<RHS: IntoIterator<Item = Element>> std::ops::AddAssign<RHS> for Element {
+    fn add_assign(&mut self, rhs: RHS) {
+        for e in rhs {
+            *self += e;
+        }
     }
 }
 

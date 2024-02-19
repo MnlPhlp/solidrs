@@ -1,16 +1,29 @@
+#[derive(Clone)]
 pub struct Element(pub(crate) InnerElement);
 
-#[derive(Clone)]
+impl Element {
+    pub fn empty() -> Self {
+        Self(InnerElement::Empty)
+    }
+}
+
+#[derive(Clone, strum::Display)]
 pub(crate) enum InnerElement {
+    Empty,
     Cube {
-        x: i32,
-        y: i32,
-        z: i32,
+        x: f32,
+        y: f32,
+        z: f32,
+        centered: bool,
+    },
+    Cylinder {
+        h: f32,
+        r: f32,
         centered: bool,
     },
     Square {
-        x: i32,
-        y: i32,
+        x: f32,
+        y: f32,
         centered: bool,
     },
     Union {
@@ -20,19 +33,19 @@ pub(crate) enum InnerElement {
         children: Vec<InnerElement>,
     },
     Translate {
-        x: i32,
-        y: i32,
-        z: i32,
+        x: f32,
+        y: f32,
+        z: f32,
         child: Box<InnerElement>,
     },
     Rotate {
-        x: i32,
-        y: i32,
-        z: i32,
+        x: f32,
+        y: f32,
+        z: f32,
         child: Box<InnerElement>,
     },
     RotateExtrude {
-        angle: i32,
+        angle: f32,
         child: Box<InnerElement>,
     },
 }

@@ -1,7 +1,11 @@
-use crate::element::{Element, InnerElement};
+use crate::{
+    element::{Element, InnerElement},
+    Num,
+};
 
 impl Element {
-    pub fn translate(self, x: i32, y: i32, z: i32) -> Self {
+    pub fn translate(self, x: impl Num, y: impl Num, z: impl Num) -> Self {
+        let (x, y, z) = (x.f32(), y.f32(), z.f32());
         let inner = match self.0 {
             InnerElement::Translate {
                 x: ix,
@@ -10,7 +14,7 @@ impl Element {
                 child,
             } => InnerElement::Translate {
                 x: ix + x,
-                y: iy + x,
+                y: iy + y,
                 z: iz + z,
                 child,
             },
@@ -24,7 +28,8 @@ impl Element {
         Element(inner)
     }
 
-    pub fn rotate(self, x: i32, y: i32, z: i32) -> Self {
+    pub fn rotate(self, x: impl Num, y: impl Num, z: impl Num) -> Self {
+        let (x, y, z) = (x.f32(), y.f32(), z.f32());
         let inner = match self.0 {
             InnerElement::Rotate {
                 x: ix,
