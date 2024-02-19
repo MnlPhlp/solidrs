@@ -1,11 +1,11 @@
 use crate::{
     element::{Element, InnerElement},
-    Num,
+    var::Arg,
 };
 
 impl Element {
-    pub fn translate(self, x: impl Num, y: impl Num, z: impl Num) -> Self {
-        let (x, y, z) = (x.f32(), y.f32(), z.f32());
+    pub fn translate(self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
+        let (x, y, z) = (x.var(), y.var(), z.var());
         let inner = match self.0 {
             InnerElement::Translate {
                 x: ix,
@@ -28,8 +28,8 @@ impl Element {
         Element(inner)
     }
 
-    pub fn rotate(self, x: impl Num, y: impl Num, z: impl Num) -> Self {
-        let (x, y, z) = (x.f32(), y.f32(), z.f32());
+    pub fn rotate(self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
+        let (x, y, z) = (x.var(), y.var(), z.var());
         let inner = match self.0 {
             InnerElement::Rotate {
                 x: ix,

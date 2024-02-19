@@ -1,9 +1,9 @@
-use crate::{element::InnerElement, Element, Num};
+use crate::{element::InnerElement, var::Arg, Element};
 
-pub fn square(x: impl Num, y: impl Num) -> Element {
+pub fn square(x: impl Arg, y: impl Arg) -> Element {
     Element(InnerElement::Square {
-        x: x.f32(),
-        y: y.f32(),
+        x: x.var(),
+        y: y.var(),
         centered: false,
     })
 }

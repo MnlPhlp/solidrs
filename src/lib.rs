@@ -11,19 +11,4 @@ pub use element::Element;
 pub use scad::ExportScad;
 pub use shapes2d::*;
 pub use shapes3d::*;
-pub use var::Var;
-
-pub trait Num: Copy {
-    fn f32(&self) -> f32;
-}
-
-impl Num for f32 {
-    fn f32(&self) -> f32 {
-        *self
-    }
-}
-impl Num for i32 {
-    fn f32(&self) -> f32 {
-        *self as f32
-    }
-}
+pub use var::{Arg, Var};

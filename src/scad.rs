@@ -1,5 +1,8 @@
-use crate::element::{Element, InnerElement};
-use std::fmt::Write;
+use crate::{
+    element::{Element, InnerElement},
+    Var,
+};
+use std::{collections::HashMap, fmt::Write};
 
 pub trait ExportScad: Sized {
     fn render_scad(self) -> String;
@@ -18,6 +21,7 @@ pub trait ExportScad: Sized {
 impl ExportScad for &Element {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
+        w.render_vars(&self.0);
         w.render(&self.0);
         w.str
     }
@@ -27,6 +31,7 @@ impl<'a, COLLECTION: IntoIterator<Item = &'a Element>> ExportScad for COLLECTION
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         for element in self {
+            w.render_vars(&element.0);
             w.render(&element.0);
         }
         w.str
@@ -88,11 +93,11 @@ impl Writer {
         }
     }
 
-    fn render_cube(&mut self, x: f32, y: f32, z: f32, centered: bool) {
+    fn render_cube(&mut self, x: Var, y: Var, z: Var, centered: bool) {
         renderln!(self, "cube([{x},{y},{z}]{});", center(centered));
     }
 
-    fn render_transform(&mut self, transform: &str, x: f32, y: f32, z: f32, child: &InnerElement) {
+    fn render_transform(&mut self, transform: &str, x: Var, y: Var, z: Var, child: &InnerElement) {
         render!(self, "{transform}([{x},{y},{z}])");
         self.render_child(child);
     }
@@ -125,17 +130,60 @@ impl Writer {
         renderln!(self, "}}");
     }
 
-    fn render_square(&mut self, x: f32, y: f32, centered: bool) {
+    fn render_square(&mut self, x: Var, y: Var, centered: bool) {
         renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
-    fn render_rot_ext(&mut self, angle: f32, child: &InnerElement) {
+    fn render_rot_ext(&mut self, angle: Var, child: &InnerElement) {
         render!(self, "rotate_extrude(angle={angle})");
         self.render_child(child);
     }
 
-    fn render_cylinder(&mut self, r: f32, h: f32, centered: bool) {
+    fn render_cylinder(&mut self, r: Var, h: Var, centered: bool) {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered))
+    }
+
+    fn render_vars(&mut self, element: &InnerElement) {
+        let mut vars = HashMap::new();
+        collect_vars(&mut vars, element);
+        for var in vars.values() {
+            if !var.get_comment().is_empty() {
+                renderln!(self, "// {}", var.get_comment());
+            }
+            renderln!(self, "{} = {};", var.get_name(), var.get_val())
+        }
+    }
+}
+
+fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement) {
+    match element {
+        InnerElement::Empty => {}
+        InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
+        InnerElement::Cylinder { h, r, .. } => add_vars(map, &[h, r]),
+        InnerElement::Square { x, y, .. } => add_vars(map, &[x, y]),
+        InnerElement::Union { children } => children.iter().for_each(|c| collect_vars(map, c)),
+        InnerElement::Diff { children } => children.iter().for_each(|c| collect_vars(map, c)),
+        InnerElement::Translate { x, y, z, child } => {
+            add_vars(map, &[x, y, z]);
+            collect_vars(map, child)
+        }
+        InnerElement::Rotate { x, y, z, child } => {
+            add_vars(map, &[x, y, z]);
+            collect_vars(map, child)
+        }
+        InnerElement::RotateExtrude { angle, child } => {
+            add_vars(map, &[angle]);
+            collect_vars(map, child)
+        }
+    }
+}
+
+fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Var]) {
+    for var in vars {
+        let name = var.get_name();
+        if !name.is_empty() && !map.contains_key(name) {
+            map.insert(name, *var);
+        }
     }
 }
 

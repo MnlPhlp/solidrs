@@ -1,29 +1,29 @@
 use crate::{
     element::{Element, InnerElement},
-    Num,
+    var::Arg,
 };
 
-pub fn cube(x: impl Num, y: impl Num, z: impl Num) -> Element {
+pub fn cube(x: impl Arg, y: impl Arg, z: impl Arg) -> Element {
     Element(InnerElement::Cube {
-        x: x.f32(),
-        y: y.f32(),
-        z: z.f32(),
+        x: x.var(),
+        y: y.var(),
+        z: z.var(),
         centered: false,
     })
 }
 
-pub fn cylinder(h: impl Num, r: impl Num) -> Element {
+pub fn cylinder(h: impl Arg, r: impl Arg) -> Element {
     Element(InnerElement::Cylinder {
-        h: h.f32(),
-        r: r.f32(),
+        h: h.var(),
+        r: r.var(),
         centered: false,
     })
 }
 
 impl Element {
-    pub fn rotate_extrude(self, angle: impl Num) -> Self {
+    pub fn rotate_extrude(self, angle: impl Arg) -> Self {
         Element(InnerElement::RotateExtrude {
-            angle: angle.f32(),
+            angle: angle.var(),
             child: Box::new(self.0),
         })
     }

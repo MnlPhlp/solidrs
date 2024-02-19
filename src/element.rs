@@ -1,3 +1,5 @@
+use crate::Var;
+
 #[derive(Clone)]
 pub struct Element(pub(crate) InnerElement);
 
@@ -11,19 +13,19 @@ impl Element {
 pub(crate) enum InnerElement {
     Empty,
     Cube {
-        x: f32,
-        y: f32,
-        z: f32,
+        x: Var,
+        y: Var,
+        z: Var,
         centered: bool,
     },
     Cylinder {
-        h: f32,
-        r: f32,
+        h: Var,
+        r: Var,
         centered: bool,
     },
     Square {
-        x: f32,
-        y: f32,
+        x: Var,
+        y: Var,
         centered: bool,
     },
     Union {
@@ -33,19 +35,19 @@ pub(crate) enum InnerElement {
         children: Vec<InnerElement>,
     },
     Translate {
-        x: f32,
-        y: f32,
-        z: f32,
+        x: Var,
+        y: Var,
+        z: Var,
         child: Box<InnerElement>,
     },
     Rotate {
-        x: f32,
-        y: f32,
-        z: f32,
+        x: Var,
+        y: Var,
+        z: Var,
         child: Box<InnerElement>,
     },
     RotateExtrude {
-        angle: f32,
+        angle: Var,
         child: Box<InnerElement>,
     },
 }
