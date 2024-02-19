@@ -15,3 +15,13 @@ pub use scad::Export;
 pub use shapes2d::*;
 pub use shapes3d::*;
 pub use var::{Arg, Val, Var};
+
+// include examples for testing
+#[cfg(test)]
+#[doc(hidden)]
+#[path = "../examples"]
+mod examples {
+    pub mod car;
+    pub mod simple;
+    pub mod variables;
+}

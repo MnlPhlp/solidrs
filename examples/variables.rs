@@ -1,6 +1,8 @@
+#[cfg(test)]
+use crate::*;
+#[cfg(not(test))]
 use solidrs::*;
-
-fn main() {
+pub fn render() -> String {
     var!(width, 10, "cube width");
     var!(height, 20, "cube height");
     var!(depth, 5, "cube depth");
@@ -9,5 +11,10 @@ fn main() {
     // this means that this translate will not match the cube surface if the height is changed in openSCAD
     let b = cylinder(10, 5).translate(0, 0, height / 2);
     let c = a + b;
-    print!("{}", c.render_scad());
+    c.render_scad()
+}
+
+#[cfg(not(test))]
+fn main() {
+    print!("{}", render());
 }
