@@ -3,9 +3,9 @@ use crate::{
     var::Arg,
 };
 
-impl Element {
-    pub fn translate(self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
-        let (x, y, z) = (x.var(), y.var(), z.var());
+impl<'a> Element<'a> {
+    pub fn translate(self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
+        let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match self.0 {
             InnerElement::Translate {
                 x: ix,
@@ -28,8 +28,8 @@ impl Element {
         Element(inner)
     }
 
-    pub fn rotate(self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
-        let (x, y, z) = (x.var(), y.var(), z.var());
+    pub fn rotate(self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
+        let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match self.0 {
             InnerElement::Rotate {
                 x: ix,

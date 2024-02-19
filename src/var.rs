@@ -1,53 +1,59 @@
 #[macro_export]
 macro_rules! var {
     ($var:ident,$val:literal) => {
-        let $var = Var::named(stringify!($var), $crate::Arg::val($val));
+        let $var = Var::new(stringify!($var), $crate::Arg::f32(&$val));
+        let $var = Val::Var(&$var);
     };
     ($var:ident,$val:literal,$comment:literal) => {
-        let $var = Var::commented(stringify!($var), $comment, $crate::Arg::val($val));
+        let $var = Var::commented(stringify!($var), $comment, $crate::Arg::f32(&$val));
+        let $var = Val::Var(&$var);
     };
 }
 
-pub trait Arg: Sized {
-    fn var(self) -> Var {
-        Var::val(self.val())
+pub trait Arg<'a>: Sized {
+    fn val(self) -> Val<'a> {
+        Val::Val(self.f32())
     }
-    fn val(self) -> f32;
+    fn f32(&self) -> f32;
 }
-impl Arg for Var {
-    fn var(self) -> Var {
-        self
+impl<'a> Arg<'a> for &'a Var {
+    fn val(self) -> Val<'a> {
+        Val::Var(self)
     }
-    fn val(self) -> f32 {
+    fn f32(&self) -> f32 {
         self.val
     }
 }
-impl Arg for f32 {
-    fn val(self) -> f32 {
+impl<'a> Arg<'a> for Val<'a> {
+    fn val(self) -> Val<'a> {
         self
     }
+    fn f32(&self) -> f32 {
+        match self {
+            Val::Val(val) => *val,
+            Val::Var(var) => var.val,
+        }
+    }
 }
-impl Arg for i32 {
-    fn val(self) -> f32 {
-        self as f32
+impl<'a> Arg<'a> for f32 {
+    fn f32(&self) -> f32 {
+        *self
+    }
+}
+impl<'a> Arg<'a> for i32 {
+    fn f32(&self) -> f32 {
+        *self as f32
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Var {
     name: &'static str,
     comment: &'static str,
     val: f32,
 }
 impl Var {
-    pub fn val(val: f32) -> Var {
-        Self {
-            name: "",
-            comment: "",
-            val,
-        }
-    }
-    pub fn named(name: &'static str, val: f32) -> Var {
+    pub fn new(name: &'static str, val: f32) -> Var {
         Self {
             name,
             comment: "",
@@ -67,48 +73,52 @@ impl Var {
         self.val
     }
 }
-impl std::fmt::Display for Var {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.name.is_empty() {
-            f.write_str(self.val.to_string().as_str())
-        } else {
-            f.write_str(self.name)
-        }
-    }
-}
 
-impl std::ops::Neg for Var {
-    type Output = Var;
+impl std::ops::Neg for Val<'_> {
+    type Output = Val<'static>;
 
     fn neg(self) -> Self::Output {
-        Var::val(-self.val)
+        Val::Val(-self.f32())
     }
 }
-impl<RHS: Arg> std::ops::Add<RHS> for Var {
-    type Output = Var;
+impl<'a, RHS: Arg<'a>> std::ops::Add<RHS> for Val<'_> {
+    type Output = Val<'static>;
 
     fn add(self, rhs: RHS) -> Self::Output {
-        Var::val(self.val + rhs.val())
+        Val::Val(self.f32() + rhs.f32())
     }
 }
-impl<RHS: Arg> std::ops::Sub<RHS> for Var {
-    type Output = Var;
+impl<'a, RHS: Arg<'a>> std::ops::Sub<RHS> for Val<'_> {
+    type Output = Val<'static>;
 
     fn sub(self, rhs: RHS) -> Self::Output {
-        Var::val(self.val - rhs.val())
+        Val::Val(self.f32() - rhs.f32())
     }
 }
-impl<RHS: Arg> std::ops::Mul<RHS> for Var {
-    type Output = Var;
+impl<'a, RHS: Arg<'a>> std::ops::Mul<RHS> for Val<'_> {
+    type Output = Val<'static>;
 
     fn mul(self, rhs: RHS) -> Self::Output {
-        Var::val(self.val * rhs.val())
+        Val::Val(self.f32() * rhs.f32())
     }
 }
-impl<RHS: Arg> std::ops::Div<RHS> for Var {
-    type Output = Var;
+impl<'a, RHS: Arg<'a>> std::ops::Div<RHS> for Val<'_> {
+    type Output = Val<'static>;
 
     fn div(self, rhs: RHS) -> Self::Output {
-        Var::val(self.val / rhs.val())
+        Val::Val(self.f32() / rhs.f32())
+    }
+}
+#[derive(Copy, Clone)]
+pub enum Val<'a> {
+    Val(f32),
+    Var(&'a Var),
+}
+impl std::fmt::Display for Val<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Val::Val(val) => f.write_str(val.to_string().as_str()),
+            Val::Var(var) => f.write_str(var.name),
+        }
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     element::{Element, InnerElement},
-    Var,
+    var::{Val, Var},
 };
 use std::{collections::HashMap, fmt::Write};
 
@@ -18,7 +18,7 @@ pub trait ExportScad: Sized {
     }
 }
 
-impl ExportScad for &Element {
+impl ExportScad for &Element<'_> {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render_vars(&self.0);
@@ -27,7 +27,7 @@ impl ExportScad for &Element {
     }
 }
 
-impl<'a, COLLECTION: IntoIterator<Item = &'a Element>> ExportScad for COLLECTION {
+impl<'a, COLLECTION: IntoIterator<Item = &'a Element<'a>>> ExportScad for COLLECTION {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         for element in self {
@@ -93,11 +93,11 @@ impl Writer {
         }
     }
 
-    fn render_cube(&mut self, x: Var, y: Var, z: Var, centered: bool) {
+    fn render_cube(&mut self, x: Val, y: Val, z: Val, centered: bool) {
         renderln!(self, "cube([{x},{y},{z}]{});", center(centered));
     }
 
-    fn render_transform(&mut self, transform: &str, x: Var, y: Var, z: Var, child: &InnerElement) {
+    fn render_transform(&mut self, transform: &str, x: Val, y: Val, z: Val, child: &InnerElement) {
         render!(self, "{transform}([{x},{y},{z}])");
         self.render_child(child);
     }
@@ -130,16 +130,16 @@ impl Writer {
         renderln!(self, "}}");
     }
 
-    fn render_square(&mut self, x: Var, y: Var, centered: bool) {
+    fn render_square(&mut self, x: Val, y: Val, centered: bool) {
         renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
-    fn render_rot_ext(&mut self, angle: Var, child: &InnerElement) {
+    fn render_rot_ext(&mut self, angle: Val, child: &InnerElement) {
         render!(self, "rotate_extrude(angle={angle})");
         self.render_child(child);
     }
 
-    fn render_cylinder(&mut self, r: Var, h: Var, centered: bool) {
+    fn render_cylinder(&mut self, r: Val, h: Val, centered: bool) {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered))
     }
 
@@ -178,11 +178,13 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement)
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Var]) {
+fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Val<'_>]) {
     for var in vars {
-        let name = var.get_name();
-        if !name.is_empty() && !map.contains_key(name) {
-            map.insert(name, *var);
+        if let Val::Var(var) = var {
+            let name = var.get_name();
+            if !name.is_empty() && !map.contains_key(name) {
+                map.insert(name, *var);
+            }
         }
     }
 }

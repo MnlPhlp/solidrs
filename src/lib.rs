@@ -11,4 +11,4 @@ pub use element::Element;
 pub use scad::ExportScad;
 pub use shapes2d::*;
 pub use shapes3d::*;
-pub use var::{Arg, Var};
+pub use var::{Arg, Val, Var};

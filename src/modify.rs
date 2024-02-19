@@ -1,6 +1,10 @@
-use crate::{element::InnerElement, var::Arg, Element, Var};
+use crate::{
+    element::InnerElement,
+    var::{Arg, Val},
+    Element,
+};
 
-impl Element {
+impl<'a> Element<'a> {
     pub fn center(&self) -> Self {
         let inner = match &self.0 {
             InnerElement::Cube { x, y, z, .. } => InnerElement::Cube {
@@ -20,13 +24,13 @@ impl Element {
         Element(inner)
     }
 
-    pub fn margin(&self, margin: impl Arg) -> Self {
-        Element(self.0.margin(margin.var()))
+    pub fn margin(&self, margin: impl Arg<'a>) -> Self {
+        Element(self.0.margin(margin.f32()))
     }
 }
 
-impl InnerElement {
-    pub fn margin(&self, margin: Var) -> Self {
+impl InnerElement<'_> {
+    fn margin(&self, margin: f32) -> Self {
         match self {
             InnerElement::Cube { x, y, z, centered } => margin_cube(*x, *y, *z, *centered, margin),
             Self::Translate { x, y, z, child } => Self::Translate {
@@ -42,20 +46,20 @@ impl InnerElement {
     }
 }
 
-fn margin_cube(x: Var, y: Var, z: Var, centered: bool, margin: Var) -> InnerElement {
+fn margin_cube(x: Val, y: Val, z: Val, centered: bool, margin: f32) -> InnerElement<'static> {
     let cube = InnerElement::Cube {
-        x: x + margin * 2,
-        y: y + margin * 2,
-        z: z + margin * 2,
+        x: x + margin * 2.,
+        y: y + margin * 2.,
+        z: z + margin * 2.,
         centered,
     };
     if centered {
         cube
     } else {
         InnerElement::Translate {
-            x: -margin,
-            y: -margin,
-            z: -margin,
+            x: -margin.val(),
+            y: -margin.val(),
+            z: -margin.val(),
             child: Box::new(cube),
         }
     }

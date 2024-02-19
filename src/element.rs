@@ -1,53 +1,53 @@
-use crate::Var;
+use crate::var::Val;
 
 #[derive(Clone)]
-pub struct Element(pub(crate) InnerElement);
+pub struct Element<'a>(pub(crate) InnerElement<'a>);
 
-impl Element {
+impl Element<'_> {
     pub fn empty() -> Self {
         Self(InnerElement::Empty)
     }
 }
 
 #[derive(Clone, strum::Display)]
-pub(crate) enum InnerElement {
+pub(crate) enum InnerElement<'a> {
     Empty,
     Cube {
-        x: Var,
-        y: Var,
-        z: Var,
+        x: Val<'a>,
+        y: Val<'a>,
+        z: Val<'a>,
         centered: bool,
     },
     Cylinder {
-        h: Var,
-        r: Var,
+        h: Val<'a>,
+        r: Val<'a>,
         centered: bool,
     },
     Square {
-        x: Var,
-        y: Var,
+        x: Val<'a>,
+        y: Val<'a>,
         centered: bool,
     },
     Union {
-        children: Vec<InnerElement>,
+        children: Vec<InnerElement<'a>>,
     },
     Diff {
-        children: Vec<InnerElement>,
+        children: Vec<InnerElement<'a>>,
     },
     Translate {
-        x: Var,
-        y: Var,
-        z: Var,
-        child: Box<InnerElement>,
+        x: Val<'a>,
+        y: Val<'a>,
+        z: Val<'a>,
+        child: Box<InnerElement<'a>>,
     },
     Rotate {
-        x: Var,
-        y: Var,
-        z: Var,
-        child: Box<InnerElement>,
+        x: Val<'a>,
+        y: Val<'a>,
+        z: Val<'a>,
+        child: Box<InnerElement<'a>>,
     },
     RotateExtrude {
-        angle: Var,
-        child: Box<InnerElement>,
+        angle: Val<'a>,
+        child: Box<InnerElement<'a>>,
     },
 }
