@@ -12,7 +12,7 @@ pub fn cube(x: impl Num, y: impl Num, z: impl Num) -> Element {
     })
 }
 
-pub fn cylinder(h: i32, r: i32) -> Element {
+pub fn cylinder(h: impl Num, r: impl Num) -> Element {
     Element(InnerElement::Cylinder {
         h: h.f32(),
         r: r.f32(),
@@ -21,7 +21,7 @@ pub fn cylinder(h: i32, r: i32) -> Element {
 }
 
 impl Element {
-    pub fn rotate_extrude(self, angle: i32) -> Self {
+    pub fn rotate_extrude(self, angle: impl Num) -> Self {
         Element(InnerElement::RotateExtrude {
             angle: angle.f32(),
             child: Box::new(self.0),

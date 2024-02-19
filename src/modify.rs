@@ -31,7 +31,6 @@ impl InnerElement {
             InnerElement::Cube { x, y, z, centered } => {
                 margin_cube(*x, *y, *z, *centered, margin.f32())
             }
-            // Self::Translate { x, y, z, child } => Self::Translate { x , y , z , child: Box::new(child.margin(margin)) }
             Self::Translate { x, y, z, child } => Self::Translate {
                 x: *x,
                 y: *y,
