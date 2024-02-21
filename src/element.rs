@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::var::Val;
 
 #[derive(Clone)]
@@ -10,7 +12,7 @@ impl Element<'_> {
     }
 }
 
-#[derive(Clone, strum::Display)]
+#[derive(Clone)]
 pub(crate) enum InnerElement<'a> {
     Empty,
     Cube {
@@ -59,4 +61,23 @@ pub(crate) enum InnerElement<'a> {
         fs: Val<'a>,
         child: Box<InnerElement<'a>>,
     },
+}
+
+impl Display for InnerElement<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            InnerElement::Empty => "empty",
+            InnerElement::Cube { .. } => "cube",
+            InnerElement::Cylinder { .. } => "cylinder",
+            InnerElement::Square { .. } => "square",
+            InnerElement::Union { .. } => "union",
+            InnerElement::Diff { .. } => "difference",
+            InnerElement::Translate { .. } => "translate",
+            InnerElement::Rotate { .. } => "rotate",
+            InnerElement::RotateExtrude { .. } => "rotate_extrude",
+            InnerElement::Fa { .. } => "fa",
+            InnerElement::Fs { .. } => "fs",
+        };
+        write!(f, "{}", name)
+    }
 }
