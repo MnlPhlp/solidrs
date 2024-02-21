@@ -1,4 +1,5 @@
 use crate::{
+    calc::Calc,
     element::{Element, InnerElement},
     var::{Val, Var},
 };
@@ -81,16 +82,16 @@ impl Writer {
     fn render(&mut self, root: &InnerElement) {
         match root {
             InnerElement::Empty => {}
-            InnerElement::Cube { x, y, z, centered } => self.render_cube(*x, *y, *z, *centered),
-            InnerElement::Cylinder { h, r, centered } => self.render_cylinder(*r, *h, *centered),
-            InnerElement::Square { x, y, centered } => self.render_square(*x, *y, *centered),
+            InnerElement::Cube { x, y, z, centered } => self.render_cube(x, y, z, *centered),
+            InnerElement::Cylinder { h, r, centered } => self.render_cylinder(r, h, *centered),
+            InnerElement::Square { x, y, centered } => self.render_square(x, y, *centered),
             InnerElement::Union { children } => self.render_union(children),
             InnerElement::Diff { children } => self.render_diff(children),
             InnerElement::Translate { x, y, z, child } => {
-                self.render_transform("translate", *x, *y, *z, child);
+                self.render_transform("translate", x, y, z, child);
             }
             InnerElement::Rotate { x, y, z, child } => {
-                self.render_transform("rotate", *x, *y, *z, child);
+                self.render_transform("rotate", x, y, z, child);
             }
             InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(angle, child),
             InnerElement::Fa { fa, child } => self.render_config_param("fa", fa, child),
@@ -98,11 +99,18 @@ impl Writer {
         }
     }
 
-    fn render_cube(&mut self, x: Val, y: Val, z: Val, centered: bool) {
+    fn render_cube(&mut self, x: &Val, y: &Val, z: &Val, centered: bool) {
         renderln!(self, "cube([{x},{y},{z}]{});", center(centered));
     }
 
-    fn render_transform(&mut self, transform: &str, x: Val, y: Val, z: Val, child: &InnerElement) {
+    fn render_transform(
+        &mut self,
+        transform: &str,
+        x: &Val,
+        y: &Val,
+        z: &Val,
+        child: &InnerElement,
+    ) {
         render!(self, "{transform}([{x},{y},{z}])");
         self.render_child(child);
     }
@@ -135,7 +143,7 @@ impl Writer {
         renderln!(self, "}}");
     }
 
-    fn render_square(&mut self, x: Val, y: Val, centered: bool) {
+    fn render_square(&mut self, x: &Val, y: &Val, centered: bool) {
         renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
@@ -144,7 +152,7 @@ impl Writer {
         self.render_child(child);
     }
 
-    fn render_cylinder(&mut self, r: Val, h: Val, centered: bool) {
+    fn render_cylinder(&mut self, r: &Val, h: &Val, centered: bool) {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
     }
 
@@ -157,7 +165,7 @@ impl Writer {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
         let mut vars = vars.values().collect::<Vec<_>>();
-        vars.sort_unstable_by(|a, b| a.get_name().cmp(b.get_name()));
+        vars.sort_unstable_by_key(|var| var.get_id());
         for var in vars {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
@@ -167,7 +175,7 @@ impl Writer {
     }
 }
 
-fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement) {
+fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement) {
     match element {
         InnerElement::Empty => {}
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
@@ -189,12 +197,20 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement)
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Val<'_>]) {
+fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();
             if !name.is_empty() && !map.contains_key(name) {
                 map.insert(name, *var);
+            }
+        }
+        if let Val::Calc(calc) = var {
+            match calc.as_ref() {
+                Calc::Neg(val) => add_vars(map, &[val]),
+                Calc::Add(a, b) | Calc::Sub(a, b) | Calc::Mul(a, b) | Calc::Div(a, b) => {
+                    add_vars(map, &[a, b]);
+                }
             }
         }
     }

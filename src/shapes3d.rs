@@ -24,10 +24,10 @@ pub fn cylinder<'a>(h: impl Arg<'a>, r: impl Arg<'a>) -> Element<'a> {
 
 impl<'a> Element<'a> {
     #[must_use]
-    pub fn rotate_extrude(self, angle: impl Arg<'a>) -> Self {
+    pub fn rotate_extrude(&self, angle: impl Arg<'a>) -> Self {
         Element(InnerElement::RotateExtrude {
             angle: angle.val(),
-            child: Box::new(self.0),
+            child: Box::new(self.0.clone()),
         })
     }
 }

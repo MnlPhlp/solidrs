@@ -1,4 +1,5 @@
 mod boolean;
+mod calc;
 mod config;
 mod element;
 mod modify;
@@ -14,7 +15,7 @@ pub use element::Element;
 pub use scad::Export;
 pub use shapes2d::*;
 pub use shapes3d::*;
-pub use var::{Arg, Val, Var};
+pub use var::{Arg, Val, Var, VAR_ID};
 
 // include examples for testing
 #[cfg(test)]
