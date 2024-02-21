@@ -91,6 +91,13 @@ impl std::ops::Neg for Val<'_> {
         Calc::neg(self)
     }
 }
+impl<'a> std::ops::Neg for &'a Var {
+    type Output = Val<'a>;
+
+    fn neg(self) -> Self::Output {
+        Calc::neg(Val::Var(self))
+    }
+}
 
 macro_rules! impl_op {
     ($op:ident,$func:ident,$t:ty) => {
