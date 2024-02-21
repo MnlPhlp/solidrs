@@ -165,7 +165,7 @@ impl Writer {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
         let mut vars = vars.values().collect::<Vec<_>>();
-        vars.sort_unstable_by(|a, b| a.get_name().cmp(b.get_name()));
+        vars.sort_unstable_by_key(|var| var.get_id());
         for var in vars {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
@@ -175,7 +175,7 @@ impl Writer {
     }
 }
 
-fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement) {
+fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement) {
     match element {
         InnerElement::Empty => {}
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
@@ -197,7 +197,7 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var>, element: &'a InnerElement)
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Val<'_>]) {
+fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();
@@ -209,7 +209,7 @@ fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Val<'_>]) {
             match calc.as_ref() {
                 Calc::Neg(val) => add_vars(map, &[val]),
                 Calc::Add(a, b) | Calc::Sub(a, b) | Calc::Mul(a, b) | Calc::Div(a, b) => {
-                    add_vars(map, &[a, b])
+                    add_vars(map, &[a, b]);
                 }
             }
         }

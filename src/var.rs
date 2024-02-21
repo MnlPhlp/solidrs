@@ -1,13 +1,25 @@
+use std::sync::atomic::AtomicU32;
+
 use crate::calc::Calc;
 
+pub static VAR_ID: AtomicU32 = AtomicU32::new(0);
 #[macro_export]
 macro_rules! var {
-    ($var:ident,$val:literal) => {
-        let $var = Var::new(stringify!($var), $val as f32);
+    ($var:ident,$val:expr) => {
+        let $var = Var::new(
+            stringify!($var),
+            $val,
+            $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+        );
         let $var = &$var;
     };
-    ($var:ident,$val:literal,$comment:literal) => {
-        let $var = Var::commented(stringify!($var), $comment, $val as f32);
+    ($var:ident,$val:expr,$comment:literal) => {
+        let $var = Var::commented(
+            stringify!($var),
+            $comment,
+            $val,
+            $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+        );
         let $var = &$var;
     };
 }
@@ -15,7 +27,7 @@ macro_rules! var {
 pub trait Arg<'a>: Sized {
     fn val(self) -> Val<'a>;
 }
-impl<'a> Arg<'a> for &'a Var {
+impl<'a> Arg<'a> for &'a Var<'a> {
     fn val(self) -> Val<'a> {
         Val::Var(self)
     }
@@ -39,23 +51,35 @@ impl<'a> Arg<'a> for i32 {
 }
 
 #[derive(Clone)]
-pub struct Var {
+pub struct Var<'a> {
     name: &'static str,
     comment: &'static str,
-    val: f32,
+    val: Val<'a>,
+    id: u32,
 }
-impl Var {
+impl<'a> Var<'a> {
     #[must_use]
-    pub fn new(name: &'static str, val: f32) -> Var {
+    pub fn new(name: &'static str, val: impl Arg<'a>, id: u32) -> Var<'a> {
         Self {
             name,
             comment: "",
-            val,
+            val: val.val(),
+            id,
         }
     }
     #[must_use]
-    pub fn commented(name: &'static str, comment: &'static str, val: f32) -> Var {
-        Self { name, comment, val }
+    pub fn commented(
+        name: &'static str,
+        comment: &'static str,
+        val: impl Arg<'a>,
+        id: u32,
+    ) -> Var<'a> {
+        Self {
+            name,
+            comment,
+            val: val.val(),
+            id,
+        }
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -63,15 +87,18 @@ impl Var {
     pub(crate) fn get_name(&self) -> &'static str {
         self.name
     }
-    pub(crate) fn get_val(&self) -> f32 {
-        self.val
+    pub(crate) fn get_val(&self) -> &Val<'a> {
+        &self.val
+    }
+    pub(crate) fn get_id(&self) -> u32 {
+        self.id
     }
 }
 
 #[derive(Clone)]
 pub enum Val<'a> {
     Val(f32),
-    Var(&'a Var),
+    Var(&'a Var<'a>),
     Calc(Box<Calc<'a>>),
 }
 impl std::fmt::Display for Val<'_> {
@@ -91,7 +118,7 @@ impl std::ops::Neg for Val<'_> {
         Calc::neg(self)
     }
 }
-impl<'a> std::ops::Neg for &'a Var {
+impl<'a> std::ops::Neg for &'a Var<'a> {
     type Output = Val<'a>;
 
     fn neg(self) -> Self::Output {
@@ -116,7 +143,7 @@ impl_op!(Sub, sub, Val<'a>);
 impl_op!(Mul, mul, Val<'a>);
 impl_op!(Div, div, Val<'a>);
 
-impl_op!(Add, add, &'a Var);
-impl_op!(Sub, sub, &'a Var);
-impl_op!(Mul, mul, &'a Var);
-impl_op!(Div, div, &'a Var);
+impl_op!(Add, add, &'a Var<'a>);
+impl_op!(Sub, sub, &'a Var<'a>);
+impl_op!(Mul, mul, &'a Var<'a>);
+impl_op!(Div, div, &'a Var<'a>);
