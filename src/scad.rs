@@ -1,4 +1,5 @@
 use crate::{
+    calc::Calc,
     element::{Element, InnerElement},
     var::{Val, Var},
 };
@@ -202,6 +203,14 @@ fn add_vars<'a>(map: &mut HashMap<&str, &'a Var>, vars: &[&'a Val<'_>]) {
             let name = var.get_name();
             if !name.is_empty() && !map.contains_key(name) {
                 map.insert(name, *var);
+            }
+        }
+        if let Val::Calc(calc) = var {
+            match calc.as_ref() {
+                Calc::Neg(val) => add_vars(map, &[val]),
+                Calc::Add(a, b) | Calc::Sub(a, b) | Calc::Mul(a, b) | Calc::Div(a, b) => {
+                    add_vars(map, &[a, b])
+                }
             }
         }
     }
