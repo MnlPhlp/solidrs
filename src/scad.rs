@@ -81,16 +81,16 @@ impl Writer {
     fn render(&mut self, root: &InnerElement) {
         match root {
             InnerElement::Empty => {}
-            InnerElement::Cube { x, y, z, centered } => self.render_cube(*x, *y, *z, *centered),
-            InnerElement::Cylinder { h, r, centered } => self.render_cylinder(*r, *h, *centered),
-            InnerElement::Square { x, y, centered } => self.render_square(*x, *y, *centered),
+            InnerElement::Cube { x, y, z, centered } => self.render_cube(x, y, z, *centered),
+            InnerElement::Cylinder { h, r, centered } => self.render_cylinder(r, h, *centered),
+            InnerElement::Square { x, y, centered } => self.render_square(x, y, *centered),
             InnerElement::Union { children } => self.render_union(children),
             InnerElement::Diff { children } => self.render_diff(children),
             InnerElement::Translate { x, y, z, child } => {
-                self.render_transform("translate", *x, *y, *z, child);
+                self.render_transform("translate", x, y, z, child);
             }
             InnerElement::Rotate { x, y, z, child } => {
-                self.render_transform("rotate", *x, *y, *z, child);
+                self.render_transform("rotate", x, y, z, child);
             }
             InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(angle, child),
             InnerElement::Fa { fa, child } => self.render_config_param("fa", fa, child),
@@ -98,11 +98,18 @@ impl Writer {
         }
     }
 
-    fn render_cube(&mut self, x: Val, y: Val, z: Val, centered: bool) {
+    fn render_cube(&mut self, x: &Val, y: &Val, z: &Val, centered: bool) {
         renderln!(self, "cube([{x},{y},{z}]{});", center(centered));
     }
 
-    fn render_transform(&mut self, transform: &str, x: Val, y: Val, z: Val, child: &InnerElement) {
+    fn render_transform(
+        &mut self,
+        transform: &str,
+        x: &Val,
+        y: &Val,
+        z: &Val,
+        child: &InnerElement,
+    ) {
         render!(self, "{transform}([{x},{y},{z}])");
         self.render_child(child);
     }
@@ -135,7 +142,7 @@ impl Writer {
         renderln!(self, "}}");
     }
 
-    fn render_square(&mut self, x: Val, y: Val, centered: bool) {
+    fn render_square(&mut self, x: &Val, y: &Val, centered: bool) {
         renderln!(self, "square([{x},{y}]{});", center(centered));
     }
 
@@ -144,7 +151,7 @@ impl Writer {
         self.render_child(child);
     }
 
-    fn render_cylinder(&mut self, r: Val, h: Val, centered: bool) {
+    fn render_cylinder(&mut self, r: &Val, h: &Val, centered: bool) {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
     }
 

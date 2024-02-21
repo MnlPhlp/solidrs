@@ -1,49 +1,40 @@
+use crate::calc::Calc;
+
 #[macro_export]
 macro_rules! var {
     ($var:ident,$val:literal) => {
-        let $var = Var::new(stringify!($var), $crate::Arg::f32(&$val));
-        let $var = Val::Var(&$var);
+        let $var = Var::new(stringify!($var), $val as f32);
+        let $var = &$var;
     };
     ($var:ident,$val:literal,$comment:literal) => {
-        let $var = Var::commented(stringify!($var), $comment, $crate::Arg::f32(&$val));
-        let $var = Val::Var(&$var);
+        let $var = Var::commented(stringify!($var), $comment, $val as f32);
+        let $var = &$var;
     };
 }
 
 pub trait Arg<'a>: Sized {
-    fn val(self) -> Val<'a> {
-        Val::Val(self.f32())
-    }
-    fn f32(&self) -> f32;
+    fn val(self) -> Val<'a>;
 }
 impl<'a> Arg<'a> for &'a Var {
     fn val(self) -> Val<'a> {
         Val::Var(self)
-    }
-    fn f32(&self) -> f32 {
-        self.val
     }
 }
 impl<'a> Arg<'a> for Val<'a> {
     fn val(self) -> Val<'a> {
         self
     }
-    fn f32(&self) -> f32 {
-        match self {
-            Val::Val(val) => *val,
-            Val::Var(var) => var.val,
-        }
-    }
 }
+
 impl<'a> Arg<'a> for f32 {
-    fn f32(&self) -> f32 {
-        *self
+    fn val(self) -> Val<'a> {
+        Val::Val(self)
     }
 }
 impl<'a> Arg<'a> for i32 {
     #[allow(clippy::cast_precision_loss)]
-    fn f32(&self) -> f32 {
-        *self as f32
+    fn val(self) -> Val<'a> {
+        Val::Val(self as f32)
     }
 }
 
@@ -77,51 +68,48 @@ impl Var {
     }
 }
 
-impl std::ops::Neg for Val<'_> {
-    type Output = Val<'static>;
-
-    fn neg(self) -> Self::Output {
-        Val::Val(-self.f32())
-    }
-}
-impl<'a, RHS: Arg<'a>> std::ops::Add<RHS> for Val<'_> {
-    type Output = Val<'static>;
-
-    fn add(self, rhs: RHS) -> Self::Output {
-        Val::Val(self.f32() + rhs.f32())
-    }
-}
-impl<'a, RHS: Arg<'a>> std::ops::Sub<RHS> for Val<'_> {
-    type Output = Val<'static>;
-
-    fn sub(self, rhs: RHS) -> Self::Output {
-        Val::Val(self.f32() - rhs.f32())
-    }
-}
-impl<'a, RHS: Arg<'a>> std::ops::Mul<RHS> for Val<'_> {
-    type Output = Val<'static>;
-
-    fn mul(self, rhs: RHS) -> Self::Output {
-        Val::Val(self.f32() * rhs.f32())
-    }
-}
-impl<'a, RHS: Arg<'a>> std::ops::Div<RHS> for Val<'_> {
-    type Output = Val<'static>;
-
-    fn div(self, rhs: RHS) -> Self::Output {
-        Val::Val(self.f32() / rhs.f32())
-    }
-}
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum Val<'a> {
     Val(f32),
     Var(&'a Var),
+    Calc(Box<Calc<'a>>),
 }
 impl std::fmt::Display for Val<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Val::Val(val) => f.write_str(val.to_string().as_str()),
             Val::Var(var) => f.write_str(var.name),
+            Val::Calc(calc) => calc.fmt(f),
         }
     }
 }
+
+impl std::ops::Neg for Val<'_> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Calc::neg(self)
+    }
+}
+
+macro_rules! impl_op {
+    ($op:ident,$func:ident,$t:ty) => {
+        impl<'a, RHS: Arg<'a>> std::ops::$op<RHS> for $t {
+            type Output = Val<'a>;
+
+            fn $func(self, rhs: RHS) -> Self::Output {
+                Calc::$func(self.val(), rhs.val())
+            }
+        }
+    };
+}
+
+impl_op!(Add, add, Val<'a>);
+impl_op!(Sub, sub, Val<'a>);
+impl_op!(Mul, mul, Val<'a>);
+impl_op!(Div, div, Val<'a>);
+
+impl_op!(Add, add, &'a Var);
+impl_op!(Sub, sub, &'a Var);
+impl_op!(Mul, mul, &'a Var);
+impl_op!(Div, div, &'a Var);
