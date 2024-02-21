@@ -30,29 +30,30 @@ use solidrs::*;
 fn main() {
     var!(width, 10, "cube width");
     var!(height, 20, "cube height");
-    var!(depth, 5, "cube depth");
-    let a = cube(width, depth, height).center();
-    // currently calculations with vars fall back to numbers, but I plan on improving this
-    // this means that this translate will not match the cube surface if the height is changed in openSCAD
-    let b = cylinder(10, 5).translate(0, 0, height / 2);
+    let a = cube(width, width / 2, height).center();
+    // you can save calculated points
+    // they will still be displayed as the calculation when rendering
+    let cube_top = height / 2;
+    // if you use var to save it, the calculation will also be written to a variable in openScad
+    var!(cylinder_height, width / 2);
+    let b = cylinder(cylinder_height, 5).translate(0, 0, cube_top);
     let c = a + b;
-    print!("{}", c.render_scad());
+    c.save_as_scad("vars");
 }
 ```
 
 produces this scad file:
 
 ```scad
-// cube depth
-depth = 5;
-// cube height
-height = 20;
 // cube width
 width = 10;
+// cube height
+height = 20;
+cylinder_height = width / 2;
 union(){
-    cube([width,depth,height],center = true);
-    translate([0,0,10]){
-        cylinder(10, r = 5);
+    cube([width,width / 2,height],center = true);
+    translate([0,0,height / 2]){
+        cylinder(cylinder_height, r = 5);
     }
 }
 ```
