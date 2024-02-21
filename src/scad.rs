@@ -22,7 +22,7 @@ pub trait Export: Sized {
     }
 }
 
-impl Export for &Element<'_> {
+impl<'a> Export for &'a Element<'a> {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render_vars(&self.0);
@@ -161,7 +161,7 @@ impl Writer {
         self.render(child);
     }
 
-    fn render_vars(&mut self, element: &InnerElement) {
+    fn render_vars<'a>(&mut self, element: &'a InnerElement<'a>) {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
         let mut vars = vars.values().collect::<Vec<_>>();
@@ -175,7 +175,7 @@ impl Writer {
     }
 }
 
-fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement) {
+fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement<'a>) {
     match element {
         InnerElement::Empty => {}
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
@@ -197,7 +197,7 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElem
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val]) {
+fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val<'a>]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();

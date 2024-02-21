@@ -1,4 +1,7 @@
-use std::sync::atomic::AtomicU32;
+use std::{
+    cell::{Ref, RefCell},
+    sync::atomic::AtomicU32,
+};
 
 use crate::calc::Calc;
 
@@ -54,7 +57,7 @@ impl<'a> Arg<'a> for i32 {
 pub struct Var<'a> {
     name: &'static str,
     comment: &'static str,
-    val: Val<'a>,
+    val: RefCell<Val<'a>>,
     id: u32,
 }
 impl<'a> Var<'a> {
@@ -63,7 +66,7 @@ impl<'a> Var<'a> {
         Self {
             name,
             comment: "",
-            val: val.val(),
+            val: RefCell::new(val.val()),
             id,
         }
     }
@@ -77,9 +80,12 @@ impl<'a> Var<'a> {
         Self {
             name,
             comment,
-            val: val.val(),
+            val: RefCell::new(val.val()),
             id,
         }
+    }
+    pub fn set(&self, val: impl Arg<'a>) {
+        *self.val.borrow_mut() = val.val();
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -87,8 +93,8 @@ impl<'a> Var<'a> {
     pub(crate) fn get_name(&self) -> &'static str {
         self.name
     }
-    pub(crate) fn get_val(&self) -> &Val<'a> {
-        &self.val
+    pub(crate) fn get_val(&self) -> Ref<Val<'a>> {
+        self.val.borrow()
     }
     pub(crate) fn get_id(&self) -> u32 {
         self.id
