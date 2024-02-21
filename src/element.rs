@@ -78,6 +78,6 @@ impl Display for InnerElement<'_> {
             InnerElement::Fa { .. } => "fa",
             InnerElement::Fs { .. } => "fs",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
