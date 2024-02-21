@@ -1,5 +1,5 @@
 // cube width
-width = 10;
+width = 20;
 // cube height
 height = 20;
 cylinder_height = width / 2;

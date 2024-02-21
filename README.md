@@ -38,6 +38,8 @@ fn main() {
     var!(cylinder_height, width / 2);
     let b = cylinder(cylinder_height, 5).translate(0, 0, cube_top);
     let c = a + b;
+    // variable values can be changed at any point
+    width.set(20);
     c.save_as_scad("vars");
 }
 ```
@@ -46,7 +48,7 @@ produces this scad file:
 
 ```scad
 // cube width
-width = 10;
+width = 20;
 // cube height
 height = 20;
 cylinder_height = width / 2;

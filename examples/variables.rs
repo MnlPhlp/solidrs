@@ -13,6 +13,8 @@ pub fn render() -> String {
     var!(cylinder_height, width / 2);
     let b = cylinder(cylinder_height, 5).translate(0, 0, cube_top);
     let c = a + b;
+    // variable values can be changed at any point
+    width.set(20);
     c.render_scad()
 }
 
