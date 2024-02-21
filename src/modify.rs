@@ -8,17 +8,17 @@ impl<'a> Element<'a> {
     #[must_use]
     /// # Panics
     //  panics for types that don't allow centering
-    pub fn center(self) -> Self {
-        let inner = match self.0 {
+    pub fn center(&self) -> Self {
+        let inner = match &self.0 {
             InnerElement::Cube { x, y, z, .. } => InnerElement::Cube {
-                x,
-                y,
-                z,
+                x: x.clone(),
+                y: y.clone(),
+                z: z.clone(),
                 centered: true,
             },
             InnerElement::Cylinder { h, r, .. } => InnerElement::Cylinder {
-                h,
-                r,
+                h: h.clone(),
+                r: r.clone(),
                 centered: true,
             },
             // ToDo fix this with types to not allow invalid calls
@@ -28,8 +28,8 @@ impl<'a> Element<'a> {
     }
 
     #[must_use]
-    pub fn margin(self, margin: impl Arg<'a>) -> Self {
-        Element(self.0.margin(margin.val()))
+    pub fn margin(&self, margin: impl Arg<'a>) -> Self {
+        Element(self.0.clone().margin(margin.val()))
     }
 }
 
