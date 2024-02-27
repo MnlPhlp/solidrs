@@ -96,6 +96,7 @@ impl Writer {
             InnerElement::RotateExtrude { angle, child } => self.render_rot_ext(angle, child),
             InnerElement::Fa { fa, child } => self.render_config_param("fa", fa, child),
             InnerElement::Fs { fs, child } => self.render_config_param("fs", fs, child),
+            InnerElement::Fn { f_n, child } => self.render_config_param("fn", f_n, child),
         }
     }
 
@@ -190,6 +191,7 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElem
         }
         InnerElement::RotateExtrude { angle: val, child }
         | InnerElement::Fs { fs: val, child }
+        | InnerElement::Fn { f_n: val, child }
         | InnerElement::Fa { fa: val, child } => {
             add_vars(map, &[val]);
             collect_vars(map, child);

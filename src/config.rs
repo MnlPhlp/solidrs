@@ -15,4 +15,11 @@ impl<'a> Element<'a> {
             child: Box::new(self.0.clone()),
         })
     }
+    #[must_use]
+    pub fn set_fn(&self, f_n: impl Arg<'a>) -> Self {
+        Element(InnerElement::Fn {
+            f_n: f_n.val(),
+            child: Box::new(self.0.clone()),
+        })
+    }
 }

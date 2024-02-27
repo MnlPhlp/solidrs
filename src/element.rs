@@ -61,6 +61,10 @@ pub(crate) enum InnerElement<'a> {
         fs: Val<'a>,
         child: Box<InnerElement<'a>>,
     },
+    Fn {
+        f_n: Val<'a>,
+        child: Box<InnerElement<'a>>,
+    },
 }
 
 impl Display for InnerElement<'_> {
@@ -77,6 +81,7 @@ impl Display for InnerElement<'_> {
             InnerElement::RotateExtrude { .. } => "rotate_extrude",
             InnerElement::Fa { .. } => "fa",
             InnerElement::Fs { .. } => "fs",
+            InnerElement::Fn { .. } => "fn",
         };
         write!(f, "{name}")
     }
