@@ -1,13 +1,10 @@
-use std::{
-    cell::{Ref, RefCell},
-    sync::atomic::AtomicU32,
-};
+use std::sync::{atomic::AtomicU32, Mutex};
 
 use crate::calc::Calc;
 
 pub static VAR_ID: AtomicU32 = AtomicU32::new(0);
 #[macro_export]
-macro_rules! var {
+macro_rules! calc {
     ($var:ident,$val:expr) => {
         let $var = Var::new(
             stringify!($var),
@@ -27,65 +24,59 @@ macro_rules! var {
     };
 }
 
-pub trait Arg<'a>: Sized {
-    fn val(self) -> Val<'a>;
+pub trait Arg: Sized {
+    fn val(self) -> Val;
 }
-impl<'a> Arg<'a> for &'a Var<'a> {
-    fn val(self) -> Val<'a> {
+impl Arg for &'static Var {
+    fn val(self) -> Val {
         Val::Var(self)
     }
 }
-impl<'a> Arg<'a> for Val<'a> {
-    fn val(self) -> Val<'a> {
+impl Arg for Val {
+    fn val(self) -> Val {
         self
     }
 }
 
-impl<'a> Arg<'a> for f32 {
-    fn val(self) -> Val<'a> {
+impl Arg for f32 {
+    fn val(self) -> Val {
         Val::Val(self)
     }
 }
-impl<'a> Arg<'a> for i32 {
+impl Arg for i32 {
     #[allow(clippy::cast_precision_loss)]
-    fn val(self) -> Val<'a> {
+    fn val(self) -> Val {
         Val::Val(self as f32)
     }
 }
 
-#[derive(Clone)]
-pub struct Var<'a> {
+pub struct Var {
     name: &'static str,
     comment: &'static str,
-    val: RefCell<Val<'a>>,
+    val: Mutex<Val>,
     id: u32,
 }
-impl<'a> Var<'a> {
+impl Var {
     #[must_use]
-    pub fn new(name: &'static str, val: impl Arg<'a>, id: u32) -> Var<'a> {
+    pub const fn new(name: &'static str, val: Val, id: u32) -> Var {
         Self {
             name,
             comment: "",
-            val: RefCell::new(val.val()),
+            val: Mutex::new(val),
             id,
         }
     }
     #[must_use]
-    pub fn commented(
-        name: &'static str,
-        comment: &'static str,
-        val: impl Arg<'a>,
-        id: u32,
-    ) -> Var<'a> {
+    pub const fn commented(name: &'static str, comment: &'static str, val: Val, id: u32) -> Var {
         Self {
             name,
             comment,
-            val: RefCell::new(val.val()),
+            val: Mutex::new(val),
             id,
         }
     }
-    pub fn set(&self, val: impl Arg<'a>) {
-        *self.val.borrow_mut() = val.val();
+    pub fn set(&self, val: impl Arg) {
+        *self.val.lock().unwrap() = val.val();
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -93,21 +84,21 @@ impl<'a> Var<'a> {
     pub(crate) fn get_name(&self) -> &'static str {
         self.name
     }
-    pub(crate) fn get_val(&self) -> Ref<Val<'a>> {
-        self.val.borrow()
+    pub(crate) fn get_val(&self) -> Val {
+        self.val.lock().unwrap().clone()
     }
     pub(crate) fn get_id(&self) -> u32 {
         self.id
     }
 }
 
-#[derive(Clone)]
-pub enum Val<'a> {
+#[derive(Clone, Copy)]
+pub enum Val {
     Val(f32),
-    Var(&'a Var<'a>),
-    Calc(Box<Calc<'a>>),
+    Var(&'static Var),
+    Calc(Calc),
 }
-impl std::fmt::Display for Val<'_> {
+impl std::fmt::Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Val::Val(val) => f.write_str(val.to_string().as_str()),
@@ -117,15 +108,15 @@ impl std::fmt::Display for Val<'_> {
     }
 }
 
-impl std::ops::Neg for Val<'_> {
+impl std::ops::Neg for Val {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         Calc::neg(self)
     }
 }
-impl<'a> std::ops::Neg for &'a Var<'a> {
-    type Output = Val<'a>;
+impl std::ops::Neg for &'static Var {
+    type Output = Val;
 
     fn neg(self) -> Self::Output {
         Calc::neg(Val::Var(self))
@@ -134,8 +125,8 @@ impl<'a> std::ops::Neg for &'a Var<'a> {
 
 macro_rules! impl_op {
     ($op:ident,$func:ident,$t:ty) => {
-        impl<'a, RHS: Arg<'a>> std::ops::$op<RHS> for $t {
-            type Output = Val<'a>;
+        impl<RHS: Arg> std::ops::$op<RHS> for $t {
+            type Output = Val;
 
             fn $func(self, rhs: RHS) -> Self::Output {
                 Calc::$func(self.val(), rhs.val())
@@ -144,12 +135,12 @@ macro_rules! impl_op {
     };
 }
 
-impl_op!(Add, add, Val<'a>);
-impl_op!(Sub, sub, Val<'a>);
-impl_op!(Mul, mul, Val<'a>);
-impl_op!(Div, div, Val<'a>);
+impl_op!(Add, add, Val);
+impl_op!(Sub, sub, Val);
+impl_op!(Mul, mul, Val);
+impl_op!(Div, div, Val);
 
-impl_op!(Add, add, &'a Var<'a>);
-impl_op!(Sub, sub, &'a Var<'a>);
-impl_op!(Mul, mul, &'a Var<'a>);
-impl_op!(Div, div, &'a Var<'a>);
+impl_op!(Add, add, &'static Var);
+impl_op!(Sub, sub, &'static Var);
+impl_op!(Mul, mul, &'static Var);
+impl_op!(Div, div, &'static Var);

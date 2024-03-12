@@ -1,5 +1,5 @@
 use crate::{
-    calc::Calc,
+    calc::CalcOp,
     element::{Element, InnerElement},
     var::{Val, Var},
 };
@@ -22,7 +22,7 @@ pub trait Export: Sized {
     }
 }
 
-impl<'a> Export for &'a Element<'a> {
+impl Export for &Element {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render_vars(&self.0);
@@ -31,7 +31,7 @@ impl<'a> Export for &'a Element<'a> {
     }
 }
 
-impl<'a, COLLECTION: IntoIterator<Item = &'a Element<'a>>> Export for COLLECTION {
+impl<'a, COLLECTION: IntoIterator<Item = &'a Element>> Export for COLLECTION {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         for element in self {
@@ -157,12 +157,12 @@ impl Writer {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
     }
 
-    fn render_config_param(&mut self, name: &str, val: &Val<'_>, child: &InnerElement<'_>) {
+    fn render_config_param(&mut self, name: &str, val: &Val, child: &InnerElement) {
         renderln!(self, "${name} = {val};");
         self.render(child);
     }
 
-    fn render_vars<'a>(&mut self, element: &'a InnerElement<'a>) {
+    fn render_vars(&mut self, element: &InnerElement) {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
         let mut vars = vars.values().collect::<Vec<_>>();
@@ -176,30 +176,30 @@ impl Writer {
     }
 }
 
-fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement<'a>) {
+fn collect_vars(map: &mut HashMap<&str, &Var>, element: &InnerElement) {
     match element {
         InnerElement::Empty => {}
-        InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
-        InnerElement::Cylinder { h, r, .. } => add_vars(map, &[h, r]),
-        InnerElement::Square { x, y, .. } => add_vars(map, &[x, y]),
+        InnerElement::Cube { x, y, z, .. } => add_vars(map, &[*x, *y, *z]),
+        InnerElement::Cylinder { h, r, .. } => add_vars(map, &[*h, *r]),
+        InnerElement::Square { x, y, .. } => add_vars(map, &[*x, *y]),
         InnerElement::Union { children } | InnerElement::Diff { children } => {
             children.iter().for_each(|c| collect_vars(map, c));
         }
         InnerElement::Translate { x, y, z, child } | InnerElement::Rotate { x, y, z, child } => {
-            add_vars(map, &[x, y, z]);
+            add_vars(map, &[*x, *y, *z]);
             collect_vars(map, child);
         }
         InnerElement::RotateExtrude { angle: val, child }
         | InnerElement::Fs { fs: val, child }
         | InnerElement::Fn { f_n: val, child }
         | InnerElement::Fa { fa: val, child } => {
-            add_vars(map, &[val]);
+            add_vars(map, &[*val]);
             collect_vars(map, child);
         }
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val<'a>]) {
+fn add_vars(map: &mut HashMap<&str, &Var>, vars: &[Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();
@@ -208,10 +208,10 @@ fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val<'a>]) {
             }
         }
         if let Val::Calc(calc) = var {
-            match calc.as_ref() {
-                Calc::Neg(val) => add_vars(map, &[val]),
-                Calc::Add(a, b) | Calc::Sub(a, b) | Calc::Mul(a, b) | Calc::Div(a, b) => {
-                    add_vars(map, &[a, b]);
+            match calc.op {
+                CalcOp::Neg => add_vars(map, &[calc.a.into()]),
+                CalcOp::Add | CalcOp::Sub | CalcOp::Mul | CalcOp::Div => {
+                    add_vars(map, &[calc.a.into(), calc.b.into()]);
                 }
             }
         }

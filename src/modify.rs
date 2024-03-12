@@ -4,21 +4,21 @@ use crate::{
     Element,
 };
 
-impl<'a> Element<'a> {
+impl Element {
     #[must_use]
     /// # Panics
     //  panics for types that don't allow centering
     pub fn center(&self) -> Self {
         let inner = match &self.0 {
             InnerElement::Cube { x, y, z, .. } => InnerElement::Cube {
-                x: x.clone(),
-                y: y.clone(),
-                z: z.clone(),
+                x: *x,
+                y: *y,
+                z: *z,
                 centered: true,
             },
             InnerElement::Cylinder { h, r, .. } => InnerElement::Cylinder {
-                h: h.clone(),
-                r: r.clone(),
+                h: *h,
+                r: *r,
                 centered: true,
             },
             // ToDo fix this with types to not allow invalid calls
@@ -28,14 +28,14 @@ impl<'a> Element<'a> {
     }
 
     #[must_use]
-    pub fn margin(&self, margin: impl Arg<'a>) -> Self {
+    pub fn margin(&self, margin: impl Arg) -> Self {
         Element(self.0.clone().margin(margin.val()))
     }
 }
 
-impl<'a> InnerElement<'a> {
+impl InnerElement {
     #[must_use]
-    fn margin(self, margin: Val<'a>) -> Self {
+    fn margin(self, margin: Val) -> Self {
         match self {
             InnerElement::Cube { x, y, z, centered } => margin_cube(x, y, z, centered, margin),
             Self::Translate { x, y, z, child } => Self::Translate {
@@ -51,25 +51,19 @@ impl<'a> InnerElement<'a> {
     }
 }
 
-fn margin_cube<'a>(
-    x: Val<'a>,
-    y: Val<'a>,
-    z: Val<'a>,
-    centered: bool,
-    margin: Val<'a>,
-) -> InnerElement<'a> {
+fn margin_cube(x: Val, y: Val, z: Val, centered: bool, margin: Val) -> InnerElement {
     let cube = InnerElement::Cube {
-        x: x + margin.clone() * 2,
-        y: y + margin.clone() * 2,
-        z: z + margin.clone() * 2,
+        x: x + margin * 2,
+        y: y + margin * 2,
+        z: z + margin * 2,
         centered,
     };
     if centered {
         cube
     } else {
         InnerElement::Translate {
-            x: -margin.clone(),
-            y: -margin.clone(),
+            x: -margin,
+            y: -margin,
             z: -margin,
             child: Box::new(cube),
         }

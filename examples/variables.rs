@@ -9,8 +9,8 @@ pub fn render() -> String {
     // you can save calculated points
     // they will still be displayed as the calculation when rendering
     let cube_top = height / 2;
-    // if you use var to save it, the calculation will also be written to a variable in openScad
-    var!(cylinder_height, width / 2);
+    // if you use calc to save it, the calculation will also be written to a variable in openScad
+    calc!(cylinder_height, width / 2);
     let b = cylinder(cylinder_height, 5).translate(0, 0, cube_top);
     let c = a + b;
     // variable values can be changed at any point

@@ -3,9 +3,9 @@ use crate::{
     var::Arg,
 };
 
-impl<'a> Element<'a> {
+impl Element {
     #[must_use]
-    pub fn translate(&self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
+    pub fn translate(&self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
         let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match &self.0 {
             InnerElement::Translate {
@@ -14,9 +14,9 @@ impl<'a> Element<'a> {
                 z: iz,
                 child,
             } => InnerElement::Translate {
-                x: ix.clone() + x,
-                y: iy.clone() + y,
-                z: iz.clone() + z,
+                x: *ix + x,
+                y: *iy + y,
+                z: *iz + z,
                 child: child.clone(),
             },
             child => InnerElement::Translate {
@@ -30,7 +30,7 @@ impl<'a> Element<'a> {
     }
 
     #[must_use]
-    pub fn rotate(&self, x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Self {
+    pub fn rotate(&self, x: impl Arg, y: impl Arg, z: impl Arg) -> Self {
         let (x, y, z) = (x.val(), y.val(), z.val());
         let inner = match &self.0 {
             InnerElement::Rotate {
@@ -39,9 +39,9 @@ impl<'a> Element<'a> {
                 z: iz,
                 child,
             } => InnerElement::Rotate {
-                x: ix.clone() + x,
-                y: iy.clone() + y,
-                z: iz.clone() + z,
+                x: *ix + x,
+                y: *iy + y,
+                z: *iz + z,
                 child: child.clone(),
             },
             child => InnerElement::Rotate {
