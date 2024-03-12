@@ -165,9 +165,7 @@ impl Writer {
     fn render_vars(&mut self, element: &InnerElement) {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
-        let mut vars = vars.values().collect::<Vec<_>>();
-        vars.sort_unstable_by_key(|var| var.get_id());
-        for var in vars {
+        for var in vars.values() {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
             }

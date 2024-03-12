@@ -14,5 +14,5 @@ pub fn render() -> String {
 
 #[cfg(not(test))]
 fn main() {
-    println!("{}", render());
+    print!("{}", render());
 }

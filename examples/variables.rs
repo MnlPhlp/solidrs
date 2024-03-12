@@ -1,6 +1,7 @@
 #[cfg(test)]
 use crate::*;
 #[cfg(not(test))]
+#[allow(clippy::wildcard_imports)]
 use solidrs::*;
 pub fn render() -> String {
     var!(width, 10, "cube width");

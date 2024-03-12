@@ -1,24 +1,13 @@
-use std::sync::atomic::AtomicU32;
-
 use crate::calc::Calc;
 
-pub static VAR_ID: AtomicU32 = AtomicU32::new(0);
 #[macro_export]
 macro_rules! var {
     ($var:ident,$val:expr) => {
-        let $var = Var::new(
-            stringify!($var),
-            $val as f32,
-            $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
-        );
+        const $var: Var = Var::new(stringify!($var), $val as f32);
     };
     ($var:ident,$val:expr,$comment:literal) => {
-        let $var = Var::commented(
-            stringify!($var),
-            $comment,
-            $val as f32,
-            $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
-        );
+        #[doc = $comment]
+        const $var: Var = Var::commented(stringify!($var), $comment, $val as f32);
     };
 }
 
@@ -53,26 +42,19 @@ pub struct Var {
     name: &'static str,
     comment: &'static str,
     val: f32,
-    id: u32,
 }
 impl Var {
     #[must_use]
-    pub const fn new(name: &'static str, val: f32, id: u32) -> Var {
+    pub const fn new(name: &'static str, val: f32) -> Var {
         Self {
             name,
             comment: "",
             val,
-            id,
         }
     }
     #[must_use]
-    pub const fn commented(name: &'static str, comment: &'static str, val: f32, id: u32) -> Var {
-        Self {
-            name,
-            comment,
-            val,
-            id,
-        }
+    pub const fn commented(name: &'static str, comment: &'static str, val: f32) -> Var {
+        Self { name, comment, val }
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -82,9 +64,6 @@ impl Var {
     }
     pub(crate) fn get_val(&self) -> Val {
         Val::Val(self.val)
-    }
-    pub(crate) fn get_id(&self) -> u32 {
-        self.id
     }
 }
 
