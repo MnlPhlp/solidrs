@@ -1,33 +1,31 @@
-use std::sync::{atomic::AtomicU32, Mutex};
+use std::sync::atomic::AtomicU32;
 
 use crate::calc::Calc;
 
 pub static VAR_ID: AtomicU32 = AtomicU32::new(0);
 #[macro_export]
-macro_rules! calc {
+macro_rules! var {
     ($var:ident,$val:expr) => {
         let $var = Var::new(
             stringify!($var),
-            $val,
+            $val as f32,
             $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
         );
-        let $var = &$var;
     };
     ($var:ident,$val:expr,$comment:literal) => {
         let $var = Var::commented(
             stringify!($var),
             $comment,
-            $val,
+            $val as f32,
             $crate::VAR_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
         );
-        let $var = &$var;
     };
 }
 
 pub trait Arg: Sized {
     fn val(self) -> Val;
 }
-impl Arg for &'static Var {
+impl Arg for Var {
     fn val(self) -> Val {
         Val::Var(self)
     }
@@ -50,33 +48,31 @@ impl Arg for i32 {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Var {
     name: &'static str,
     comment: &'static str,
-    val: Mutex<Val>,
+    val: f32,
     id: u32,
 }
 impl Var {
     #[must_use]
-    pub const fn new(name: &'static str, val: Val, id: u32) -> Var {
+    pub const fn new(name: &'static str, val: f32, id: u32) -> Var {
         Self {
             name,
             comment: "",
-            val: Mutex::new(val),
+            val,
             id,
         }
     }
     #[must_use]
-    pub const fn commented(name: &'static str, comment: &'static str, val: Val, id: u32) -> Var {
+    pub const fn commented(name: &'static str, comment: &'static str, val: f32, id: u32) -> Var {
         Self {
             name,
             comment,
-            val: Mutex::new(val),
+            val,
             id,
         }
-    }
-    pub fn set(&self, val: impl Arg) {
-        *self.val.lock().unwrap() = val.val();
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -85,7 +81,7 @@ impl Var {
         self.name
     }
     pub(crate) fn get_val(&self) -> Val {
-        self.val.lock().unwrap().clone()
+        Val::Val(self.val)
     }
     pub(crate) fn get_id(&self) -> u32 {
         self.id
@@ -95,7 +91,7 @@ impl Var {
 #[derive(Clone, Copy)]
 pub enum Val {
     Val(f32),
-    Var(&'static Var),
+    Var(Var),
     Calc(Calc),
 }
 impl std::fmt::Display for Val {
@@ -115,7 +111,7 @@ impl std::ops::Neg for Val {
         Calc::neg(self)
     }
 }
-impl std::ops::Neg for &'static Var {
+impl std::ops::Neg for Var {
     type Output = Val;
 
     fn neg(self) -> Self::Output {
@@ -140,7 +136,7 @@ impl_op!(Sub, sub, Val);
 impl_op!(Mul, mul, Val);
 impl_op!(Div, div, Val);
 
-impl_op!(Add, add, &'static Var);
-impl_op!(Sub, sub, &'static Var);
-impl_op!(Mul, mul, &'static Var);
-impl_op!(Div, div, &'static Var);
+impl_op!(Add, add, Var);
+impl_op!(Sub, sub, Var);
+impl_op!(Mul, mul, Var);
+impl_op!(Div, div, Var);

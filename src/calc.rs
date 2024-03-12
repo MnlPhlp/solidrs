@@ -108,7 +108,7 @@ impl Display for Calc {
 #[derive(Clone, Copy)]
 pub enum Val0 {
     Val(f32),
-    Var(&'static Var),
+    Var(Var),
     Calc(SubCalc1),
 }
 impl From<Val> for Val0 {
@@ -148,7 +148,7 @@ pub struct SubCalc1 {
 #[derive(Clone, Copy)]
 pub enum Val1 {
     Val(f32),
-    Var(&'static Var),
+    Var(Var),
 }
 impl From<Val0> for Val1 {
     fn from(value: Val0) -> Self {

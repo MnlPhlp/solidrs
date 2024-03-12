@@ -176,7 +176,7 @@ impl Writer {
     }
 }
 
-fn collect_vars(map: &mut HashMap<&str, &Var>, element: &InnerElement) {
+fn collect_vars(map: &mut HashMap<&str, Var>, element: &InnerElement) {
     match element {
         InnerElement::Empty => {}
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[*x, *y, *z]),
@@ -199,7 +199,7 @@ fn collect_vars(map: &mut HashMap<&str, &Var>, element: &InnerElement) {
     }
 }
 
-fn add_vars(map: &mut HashMap<&str, &Var>, vars: &[Val]) {
+fn add_vars(map: &mut HashMap<&str, Var>, vars: &[Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();

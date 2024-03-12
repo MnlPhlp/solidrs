@@ -15,7 +15,6 @@ pub use element::Element;
 pub use scad::Export;
 pub use shapes2d::*;
 pub use shapes3d::*;
-pub use solidrs_macros::var;
 pub use var::{Arg, Val, Var, VAR_ID};
 
 // include examples for testing
