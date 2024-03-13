@@ -165,7 +165,21 @@ impl Writer {
     fn render_vars(&mut self, element: &InnerElement) {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
-        for var in vars.values() {
+        let values = vars
+            .values()
+            .filter(|var| !var.is_clac())
+            .collect::<Vec<_>>();
+        let calcs = vars
+            .values()
+            .filter(|var| var.is_clac())
+            .collect::<Vec<_>>();
+        for var in values {
+            if !var.get_comment().is_empty() {
+                renderln!(self, "// {}", var.get_comment());
+            }
+            renderln!(self, "{} = {};", var.get_name(), var.get_val());
+        }
+        for var in calcs {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
             }

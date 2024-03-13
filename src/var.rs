@@ -2,12 +2,22 @@ use crate::calc::Calc;
 
 #[macro_export]
 macro_rules! var {
+    ($var:ident,$val:literal) => {
+        const $var: Var = Var::new(stringify!($var), stringify!($val), false);
+    };
+    ($var:ident,$val:literal,$comment:literal) => {
+        #[doc = $comment]
+        const $var: Var = Var::commented(stringify!($var), $comment, stringify!($val), false);
+    };
+}
+#[macro_export]
+macro_rules! calc {
     ($var:ident,$val:expr) => {
-        const $var: Var = Var::new(stringify!($var), $val as f32);
+        const $var: Var = Var::new(stringify!($var), stringify!($val), true);
     };
     ($var:ident,$val:expr,$comment:literal) => {
         #[doc = $comment]
-        const $var: Var = Var::commented(stringify!($var), $comment, $val as f32);
+        const $var: Var = Var::commented(stringify!($var), $comment, stringify!($val), true);
     };
 }
 
@@ -36,25 +46,36 @@ impl Arg for i32 {
         Val::Val(self as f32)
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct Var {
     name: &'static str,
     comment: &'static str,
-    val: f32,
+    val: &'static str,
+    calc: bool,
 }
 impl Var {
     #[must_use]
-    pub const fn new(name: &'static str, val: f32) -> Var {
+    pub const fn new(name: &'static str, val: &'static str, calc: bool) -> Var {
         Self {
             name,
             comment: "",
             val,
+            calc,
         }
     }
     #[must_use]
-    pub const fn commented(name: &'static str, comment: &'static str, val: f32) -> Var {
-        Self { name, comment, val }
+    pub const fn commented(
+        name: &'static str,
+        comment: &'static str,
+        val: &'static str,
+        calc: bool,
+    ) -> Var {
+        Self {
+            name,
+            comment,
+            val,
+            calc,
+        }
     }
     pub(crate) fn get_comment(&self) -> &'static str {
         self.comment
@@ -62,8 +83,12 @@ impl Var {
     pub(crate) fn get_name(&self) -> &'static str {
         self.name
     }
-    pub(crate) fn get_val(&self) -> Val {
-        Val::Val(self.val)
+    pub(crate) fn get_val(&self) -> &'static str {
+        self.val
+    }
+
+    pub(crate) fn is_clac(&self) -> bool {
+        self.calc
     }
 }
 
