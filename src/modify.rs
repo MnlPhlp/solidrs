@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     element::InnerElement,
     var::{Arg, Val},
@@ -11,14 +13,14 @@ impl Element {
     pub fn center(&self) -> Self {
         let inner = match &self.0 {
             InnerElement::Cube { x, y, z, .. } => InnerElement::Cube {
-                x: *x,
-                y: *y,
-                z: *z,
+                x: x.clone(),
+                y: y.clone(),
+                z: z.clone(),
                 centered: true,
             },
             InnerElement::Cylinder { h, r, .. } => InnerElement::Cylinder {
-                h: *h,
-                r: *r,
+                h: h.clone(),
+                r: r.clone(),
                 centered: true,
             },
             // ToDo fix this with types to not allow invalid calls
@@ -53,18 +55,18 @@ impl InnerElement {
 
 fn margin_cube(x: Val, y: Val, z: Val, centered: bool, margin: Val) -> InnerElement {
     let cube = InnerElement::Cube {
-        x: x + margin * 2,
-        y: y + margin * 2,
-        z: z + margin * 2,
+        x: Val::Calc(Arc::new(x + margin.clone() * 2)),
+        y: Val::Calc(Arc::new(y + margin.clone() * 2)),
+        z: Val::Calc(Arc::new(z + margin.clone() * 2)),
         centered,
     };
     if centered {
         cube
     } else {
         InnerElement::Translate {
-            x: -margin,
-            y: -margin,
-            z: -margin,
+            x: Val::Calc(Arc::new(-margin.clone())),
+            y: Val::Calc(Arc::new(-margin.clone())),
+            z: Val::Calc(Arc::new(-margin)),
             child: Box::new(cube),
         }
     }

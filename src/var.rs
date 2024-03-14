@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::calc::Calc;
 
 #[macro_export]
@@ -24,6 +26,7 @@ macro_rules! calc {
 pub trait Arg: Sized {
     fn val(self) -> Val;
 }
+
 impl Arg for Var {
     fn val(self) -> Val {
         Val::Var(self)
@@ -34,7 +37,11 @@ impl Arg for Val {
         self
     }
 }
-
+impl Arg for Calc {
+    fn val(self) -> Val {
+        Val::Calc(Arc::new(self))
+    }
+}
 impl Arg for f32 {
     fn val(self) -> Val {
         Val::Val(self)
@@ -92,11 +99,11 @@ impl Var {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum Val {
     Val(f32),
     Var(Var),
-    Calc(Calc),
+    Calc(Arc<Calc>),
 }
 impl std::fmt::Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -109,14 +116,14 @@ impl std::fmt::Display for Val {
 }
 
 impl std::ops::Neg for Val {
-    type Output = Self;
+    type Output = Calc;
 
     fn neg(self) -> Self::Output {
         Calc::neg(self)
     }
 }
 impl std::ops::Neg for Var {
-    type Output = Val;
+    type Output = Calc;
 
     fn neg(self) -> Self::Output {
         Calc::neg(Val::Var(self))
@@ -126,7 +133,7 @@ impl std::ops::Neg for Var {
 macro_rules! impl_op {
     ($op:ident,$func:ident,$t:ty) => {
         impl<RHS: Arg> std::ops::$op<RHS> for $t {
-            type Output = Val;
+            type Output = Calc;
 
             fn $func(self, rhs: RHS) -> Self::Output {
                 Calc::$func(self.val(), rhs.val())
@@ -139,6 +146,11 @@ impl_op!(Add, add, Val);
 impl_op!(Sub, sub, Val);
 impl_op!(Mul, mul, Val);
 impl_op!(Div, div, Val);
+
+impl_op!(Add, add, Calc);
+impl_op!(Sub, sub, Calc);
+impl_op!(Mul, mul, Calc);
+impl_op!(Div, div, Calc);
 
 impl_op!(Add, add, Var);
 impl_op!(Sub, sub, Var);

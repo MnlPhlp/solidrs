@@ -191,27 +191,27 @@ impl Writer {
 fn collect_vars(map: &mut HashMap<&str, Var>, element: &InnerElement) {
     match element {
         InnerElement::Empty => {}
-        InnerElement::Cube { x, y, z, .. } => add_vars(map, &[*x, *y, *z]),
-        InnerElement::Cylinder { h, r, .. } => add_vars(map, &[*h, *r]),
-        InnerElement::Square { x, y, .. } => add_vars(map, &[*x, *y]),
+        InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
+        InnerElement::Cylinder { h, r, .. } => add_vars(map, &[h, r]),
+        InnerElement::Square { x, y, .. } => add_vars(map, &[x, y]),
         InnerElement::Union { children } | InnerElement::Diff { children } => {
             children.iter().for_each(|c| collect_vars(map, c));
         }
         InnerElement::Translate { x, y, z, child } | InnerElement::Rotate { x, y, z, child } => {
-            add_vars(map, &[*x, *y, *z]);
+            add_vars(map, &[x, y, z]);
             collect_vars(map, child);
         }
         InnerElement::RotateExtrude { angle: val, child }
         | InnerElement::Fs { fs: val, child }
         | InnerElement::Fn { f_n: val, child }
         | InnerElement::Fa { fa: val, child } => {
-            add_vars(map, &[*val]);
+            add_vars(map, &[val]);
             collect_vars(map, child);
         }
     }
 }
 
-fn add_vars(map: &mut HashMap<&str, Var>, vars: &[Val]) {
+fn add_vars(map: &mut HashMap<&str, Var>, vars: &[&Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();
@@ -221,9 +221,9 @@ fn add_vars(map: &mut HashMap<&str, Var>, vars: &[Val]) {
         }
         if let Val::Calc(calc) = var {
             match calc.op {
-                CalcOp::Neg => add_vars(map, &[calc.a.into()]),
+                CalcOp::Neg => add_vars(map, &[&calc.a.into()]),
                 CalcOp::Add | CalcOp::Sub | CalcOp::Mul | CalcOp::Div => {
-                    add_vars(map, &[calc.a.into(), calc.b.into()]);
+                    add_vars(map, &[&calc.a.into(), &calc.b.into()]);
                 }
             }
         }

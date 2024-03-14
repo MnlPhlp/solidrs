@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use crate::{
     element::{Element, InnerElement},
     var::Arg,
+    Val,
 };
 
 impl Element {
@@ -14,9 +17,9 @@ impl Element {
                 z: iz,
                 child,
             } => InnerElement::Translate {
-                x: *ix + x,
-                y: *iy + y,
-                z: *iz + z,
+                x: Val::Calc(Arc::new(ix.clone() + x)),
+                y: Val::Calc(Arc::new(iy.clone() + y)),
+                z: Val::Calc(Arc::new(iz.clone() + z)),
                 child: child.clone(),
             },
             child => InnerElement::Translate {
@@ -39,9 +42,9 @@ impl Element {
                 z: iz,
                 child,
             } => InnerElement::Rotate {
-                x: *ix + x,
-                y: *iy + y,
-                z: *iz + z,
+                x: Val::Calc(Arc::new(ix.clone() + x)),
+                y: Val::Calc(Arc::new(iy.clone() + y)),
+                z: Val::Calc(Arc::new(iz.clone() + z)),
                 child: child.clone(),
             },
             child => InnerElement::Rotate {
