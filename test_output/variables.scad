@@ -1,11 +1,11 @@
 // cube height
-height = 20;
+HEIGHT = 20;
 // cube width
-width = 10;
-cylinder_height = width / 2;
+WIDTH = 10;
+CYLINDER_HEIGHT = WIDTH / 2;
 union(){
-    cube([width,width / 2,height],center = true);
-    translate([0,0,height / 2]){
-        cylinder(cylinder_height, r = 5);
+    cube([WIDTH,WIDTH / 2,HEIGHT],center = true);
+    translate([0,0,HEIGHT / 2]){
+        cylinder(CYLINDER_HEIGHT, r = 5);
     }
 }
