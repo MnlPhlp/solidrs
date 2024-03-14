@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[must_use]
-pub fn cube<'a>(x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Element<'a> {
+pub fn cube(x: impl Arg, y: impl Arg, z: impl Arg) -> Element {
     Element(InnerElement::Cube {
         x: x.val(),
         y: y.val(),
@@ -14,7 +14,7 @@ pub fn cube<'a>(x: impl Arg<'a>, y: impl Arg<'a>, z: impl Arg<'a>) -> Element<'a
 }
 
 #[must_use]
-pub fn cylinder<'a>(h: impl Arg<'a>, r: impl Arg<'a>) -> Element<'a> {
+pub fn cylinder(h: impl Arg, r: impl Arg) -> Element {
     Element(InnerElement::Cylinder {
         h: h.val(),
         r: r.val(),
@@ -22,9 +22,9 @@ pub fn cylinder<'a>(h: impl Arg<'a>, r: impl Arg<'a>) -> Element<'a> {
     })
 }
 
-impl<'a> Element<'a> {
+impl Element {
     #[must_use]
-    pub fn rotate_extrude(&self, angle: impl Arg<'a>) -> Self {
+    pub fn rotate_extrude(&self, angle: impl Arg) -> Self {
         Element(InnerElement::RotateExtrude {
             angle: angle.val(),
             child: Box::new(self.0.clone()),

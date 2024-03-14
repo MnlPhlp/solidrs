@@ -1,5 +1,5 @@
 use crate::{
-    calc::Calc,
+    calc::CalcOp,
     element::{Element, InnerElement},
     var::{Val, Var},
 };
@@ -22,7 +22,7 @@ pub trait Export: Sized {
     }
 }
 
-impl<'a> Export for &'a Element<'a> {
+impl Export for &Element {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         w.render_vars(&self.0);
@@ -31,7 +31,7 @@ impl<'a> Export for &'a Element<'a> {
     }
 }
 
-impl<'a, COLLECTION: IntoIterator<Item = &'a Element<'a>>> Export for COLLECTION {
+impl<'a, COLLECTION: IntoIterator<Item = &'a Element>> Export for COLLECTION {
     fn render_scad(self) -> String {
         let mut w = Writer::new();
         for element in self {
@@ -157,17 +157,31 @@ impl Writer {
         renderln!(self, "cylinder({h}, r = {r}{});", center(centered));
     }
 
-    fn render_config_param(&mut self, name: &str, val: &Val<'_>, child: &InnerElement<'_>) {
+    fn render_config_param(&mut self, name: &str, val: &Val, child: &InnerElement) {
         renderln!(self, "${name} = {val};");
         self.render(child);
     }
 
-    fn render_vars<'a>(&mut self, element: &'a InnerElement<'a>) {
+    fn render_vars(&mut self, element: &InnerElement) {
         let mut vars = HashMap::new();
         collect_vars(&mut vars, element);
-        let mut vars = vars.values().collect::<Vec<_>>();
-        vars.sort_unstable_by_key(|var| var.get_id());
-        for var in vars {
+        let mut values = vars
+            .values()
+            .filter(|var| !var.is_clac())
+            .collect::<Vec<_>>();
+        values.sort_unstable_by_key(|v| v.get_name());
+        let mut calcs = vars
+            .values()
+            .filter(|var| var.is_clac())
+            .collect::<Vec<_>>();
+        calcs.sort_unstable_by_key(|c| c.get_name());
+        for var in values {
+            if !var.get_comment().is_empty() {
+                renderln!(self, "// {}", var.get_comment());
+            }
+            renderln!(self, "{} = {};", var.get_name(), var.get_val());
+        }
+        for var in calcs {
             if !var.get_comment().is_empty() {
                 renderln!(self, "// {}", var.get_comment());
             }
@@ -176,7 +190,7 @@ impl Writer {
     }
 }
 
-fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElement<'a>) {
+fn collect_vars(map: &mut HashMap<&str, Var>, element: &InnerElement) {
     match element {
         InnerElement::Empty => {}
         InnerElement::Cube { x, y, z, .. } => add_vars(map, &[x, y, z]),
@@ -199,7 +213,7 @@ fn collect_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, element: &'a InnerElem
     }
 }
 
-fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val<'a>]) {
+fn add_vars(map: &mut HashMap<&str, Var>, vars: &[&Val]) {
     for var in vars {
         if let Val::Var(var) = var {
             let name = var.get_name();
@@ -208,10 +222,10 @@ fn add_vars<'a>(map: &mut HashMap<&str, &'a Var<'a>>, vars: &[&'a Val<'a>]) {
             }
         }
         if let Val::Calc(calc) = var {
-            match calc.as_ref() {
-                Calc::Neg(val) => add_vars(map, &[val]),
-                Calc::Add(a, b) | Calc::Sub(a, b) | Calc::Mul(a, b) | Calc::Div(a, b) => {
-                    add_vars(map, &[a, b]);
+            match calc.op {
+                CalcOp::Neg => add_vars(map, &[&calc.a]),
+                CalcOp::Add | CalcOp::Sub | CalcOp::Mul | CalcOp::Div => {
+                    add_vars(map, &[&calc.a, &calc.b]);
                 }
             }
         }

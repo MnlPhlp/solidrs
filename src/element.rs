@@ -3,9 +3,9 @@ use std::fmt::Display;
 use crate::var::Val;
 
 #[derive(Clone)]
-pub struct Element<'a>(pub(crate) InnerElement<'a>);
+pub struct Element(pub(crate) InnerElement);
 
-impl Element<'_> {
+impl Element {
     #[must_use]
     pub fn empty() -> Self {
         Self(InnerElement::Empty)
@@ -13,61 +13,61 @@ impl Element<'_> {
 }
 
 #[derive(Clone)]
-pub(crate) enum InnerElement<'a> {
+pub(crate) enum InnerElement {
     Empty,
     Cube {
-        x: Val<'a>,
-        y: Val<'a>,
-        z: Val<'a>,
+        x: Val,
+        y: Val,
+        z: Val,
         centered: bool,
     },
     Cylinder {
-        h: Val<'a>,
-        r: Val<'a>,
+        h: Val,
+        r: Val,
         centered: bool,
     },
     Square {
-        x: Val<'a>,
-        y: Val<'a>,
+        x: Val,
+        y: Val,
         centered: bool,
     },
     Union {
-        children: Vec<InnerElement<'a>>,
+        children: Vec<InnerElement>,
     },
     Diff {
-        children: Vec<InnerElement<'a>>,
+        children: Vec<InnerElement>,
     },
     Translate {
-        x: Val<'a>,
-        y: Val<'a>,
-        z: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        x: Val,
+        y: Val,
+        z: Val,
+        child: Box<InnerElement>,
     },
     Rotate {
-        x: Val<'a>,
-        y: Val<'a>,
-        z: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        x: Val,
+        y: Val,
+        z: Val,
+        child: Box<InnerElement>,
     },
     RotateExtrude {
-        angle: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        angle: Val,
+        child: Box<InnerElement>,
     },
     Fa {
-        fa: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        fa: Val,
+        child: Box<InnerElement>,
     },
     Fs {
-        fs: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        fs: Val,
+        child: Box<InnerElement>,
     },
     Fn {
-        f_n: Val<'a>,
-        child: Box<InnerElement<'a>>,
+        f_n: Val,
+        child: Box<InnerElement>,
     },
 }
 
-impl Display for InnerElement<'_> {
+impl Display for InnerElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
             InnerElement::Empty => "empty",

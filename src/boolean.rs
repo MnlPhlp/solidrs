@@ -2,7 +2,7 @@
 
 use crate::element::{Element, InnerElement};
 
-impl std::ops::Add for InnerElement<'_> {
+impl std::ops::Add for InnerElement {
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self::Output {
@@ -18,7 +18,7 @@ impl std::ops::Add for InnerElement<'_> {
     }
 }
 
-impl std::ops::Sub for InnerElement<'_> {
+impl std::ops::Sub for InnerElement {
     type Output = Self;
 
     fn sub(mut self, rhs: Self) -> Self::Output {
@@ -36,7 +36,7 @@ impl std::ops::Sub for InnerElement<'_> {
 
 // Element impls
 
-impl std::ops::Add for Element<'_> {
+impl std::ops::Add for Element {
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self::Output {
@@ -45,7 +45,7 @@ impl std::ops::Add for Element<'_> {
     }
 }
 
-impl<'a, RHS: Iterator<Item = Element<'a>>> std::ops::Add<RHS> for Element<'a> {
+impl<RHS: Iterator<Item = Element>> std::ops::Add<RHS> for Element {
     type Output = Self;
 
     fn add(mut self, rhs: RHS) -> Self::Output {
@@ -56,12 +56,12 @@ impl<'a, RHS: Iterator<Item = Element<'a>>> std::ops::Add<RHS> for Element<'a> {
     }
 }
 
-impl std::ops::AddAssign for Element<'_> {
+impl std::ops::AddAssign for Element {
     fn add_assign(&mut self, rhs: Self) {
         self.0 = self.0.clone() + rhs.0;
     }
 }
-impl<'a, RHS: IntoIterator<Item = Element<'a>>> std::ops::AddAssign<RHS> for Element<'a> {
+impl<RHS: IntoIterator<Item = Element>> std::ops::AddAssign<RHS> for Element {
     fn add_assign(&mut self, rhs: RHS) {
         for e in rhs {
             *self += e;
@@ -69,7 +69,7 @@ impl<'a, RHS: IntoIterator<Item = Element<'a>>> std::ops::AddAssign<RHS> for Ele
     }
 }
 
-impl std::ops::Sub for Element<'_> {
+impl std::ops::Sub for Element {
     type Output = Self;
 
     fn sub(mut self, rhs: Self) -> Self::Output {
@@ -78,7 +78,7 @@ impl std::ops::Sub for Element<'_> {
     }
 }
 
-impl std::ops::SubAssign for Element<'_> {
+impl std::ops::SubAssign for Element {
     fn sub_assign(&mut self, rhs: Self) {
         self.0 = self.0.clone() - rhs.0;
     }

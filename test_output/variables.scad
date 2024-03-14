@@ -1,7 +1,7 @@
-// cube width
-width = 20;
 // cube height
 height = 20;
+// cube width
+width = 10;
 cylinder_height = width / 2;
 union(){
     cube([width,width / 2,height],center = true);

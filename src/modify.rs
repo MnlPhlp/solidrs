@@ -4,7 +4,7 @@ use crate::{
     Element,
 };
 
-impl<'a> Element<'a> {
+impl Element {
     #[must_use]
     /// # Panics
     //  panics for types that don't allow centering
@@ -28,14 +28,14 @@ impl<'a> Element<'a> {
     }
 
     #[must_use]
-    pub fn margin(&self, margin: impl Arg<'a>) -> Self {
+    pub fn margin(&self, margin: impl Arg) -> Self {
         Element(self.0.clone().margin(margin.val()))
     }
 }
 
-impl<'a> InnerElement<'a> {
+impl InnerElement {
     #[must_use]
-    fn margin(self, margin: Val<'a>) -> Self {
+    fn margin(self, margin: Val) -> Self {
         match self {
             InnerElement::Cube { x, y, z, centered } => margin_cube(x, y, z, centered, margin),
             Self::Translate { x, y, z, child } => Self::Translate {
@@ -51,26 +51,20 @@ impl<'a> InnerElement<'a> {
     }
 }
 
-fn margin_cube<'a>(
-    x: Val<'a>,
-    y: Val<'a>,
-    z: Val<'a>,
-    centered: bool,
-    margin: Val<'a>,
-) -> InnerElement<'a> {
+fn margin_cube(x: Val, y: Val, z: Val, centered: bool, margin: Val) -> InnerElement {
     let cube = InnerElement::Cube {
-        x: x + margin.clone() * 2,
-        y: y + margin.clone() * 2,
-        z: z + margin.clone() * 2,
+        x: Val::Calc(x + margin.clone() * 2),
+        y: Val::Calc(y + margin.clone() * 2),
+        z: Val::Calc(z + margin.clone() * 2),
         centered,
     };
     if centered {
         cube
     } else {
         InnerElement::Translate {
-            x: -margin.clone(),
-            y: -margin.clone(),
-            z: -margin,
+            x: Val::Calc(-margin.clone()),
+            y: Val::Calc(-margin.clone()),
+            z: Val::Calc(-margin),
             child: Box::new(cube),
         }
     }

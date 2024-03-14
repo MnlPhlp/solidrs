@@ -1,67 +1,72 @@
-use std::fmt::Display;
+use std::{fmt::Display, sync::Arc};
 
 use crate::Val;
 
+#[derive(Clone, Copy)]
+#[allow(clippy::module_name_repetitions)]
+pub enum CalcOp {
+    Neg,
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
 #[derive(Clone)]
-pub enum Calc<'a> {
-    Neg(Val<'a>),
-    Add(Val<'a>, Val<'a>),
-    Sub(Val<'a>, Val<'a>),
-    Mul(Val<'a>, Val<'a>),
-    Div(Val<'a>, Val<'a>),
+pub struct Calc {
+    pub op: CalcOp,
+    pub a: Arc<Val>,
+    pub b: Arc<Val>,
 }
 
-impl<'a> Calc<'a> {
-    pub fn neg(val: Val<'a>) -> Val<'a> {
-        if let Val::Val(float) = val {
-            Val::Val(-float)
-        } else {
-            Val::Calc(Box::new(Calc::Neg(val)))
+impl Calc {
+    pub fn neg(val: Val) -> Self {
+        Calc {
+            op: CalcOp::Neg,
+            a: val.into(),
+            b: Arc::new(Val::Val(0.)),
         }
     }
 
-    pub(crate) fn add(a: Val<'a>, b: Val<'a>) -> Val<'a> {
-        if let Val::Val(float_a) = a {
-            if let Val::Val(float_b) = b {
-                return Val::Val(float_a + float_b);
-            }
+    pub(crate) fn add(a: Val, b: Val) -> Calc {
+        Calc {
+            op: CalcOp::Add,
+            a: a.into(),
+            b: b.into(),
         }
-        Val::Calc(Box::new(Calc::Add(a, b)))
     }
-    pub(crate) fn sub(a: Val<'a>, b: Val<'a>) -> Val<'a> {
-        if let Val::Val(float_a) = a {
-            if let Val::Val(float_b) = b {
-                return Val::Val(float_a - float_b);
-            }
+    pub(crate) fn sub(a: Val, b: Val) -> Calc {
+        Calc {
+            op: CalcOp::Sub,
+            a: a.into(),
+            b: b.into(),
         }
-        Val::Calc(Box::new(Calc::Sub(a, b)))
     }
-    pub(crate) fn mul(a: Val<'a>, b: Val<'a>) -> Val<'a> {
-        if let Val::Val(float_a) = a {
-            if let Val::Val(float_b) = b {
-                return Val::Val(float_a * float_b);
-            }
+    pub(crate) fn mul(a: Val, b: Val) -> Calc {
+        Calc {
+            op: CalcOp::Mul,
+            a: a.into(),
+            b: b.into(),
         }
-        Val::Calc(Box::new(Calc::Mul(a, b)))
     }
-    pub(crate) fn div(a: Val<'a>, b: Val<'a>) -> Val<'a> {
-        if let Val::Val(float_a) = a {
-            if let Val::Val(float_b) = b {
-                return Val::Val(float_a / float_b);
-            }
+    pub(crate) fn div(a: Val, b: Val) -> Calc {
+        Calc {
+            op: CalcOp::Div,
+            a: a.into(),
+            b: b.into(),
         }
-        Val::Calc(Box::new(Calc::Div(a, b)))
     }
 }
 
-impl Display for Calc<'_> {
+impl Display for Calc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Calc::Neg(val) => write!(f, "-{val}"),
-            Calc::Add(a, b) => write!(f, "{a} + {b}"),
-            Calc::Sub(a, b) => write!(f, "{a} - {b}"),
-            Calc::Mul(a, b) => write!(f, "{a} * {b}"),
-            Calc::Div(a, b) => write!(f, "{a} / {b}"),
+        let a = &self.a;
+        let b = &self.b;
+        match self.op {
+            CalcOp::Neg => write!(f, "-{a}"),
+            CalcOp::Add => write!(f, "{a} + {b}"),
+            CalcOp::Sub => write!(f, "{a} - {b}"),
+            CalcOp::Mul => write!(f, "{a} * {b}"),
+            CalcOp::Div => write!(f, "{a} / {b}"),
         }
     }
 }

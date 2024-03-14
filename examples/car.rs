@@ -1,12 +1,14 @@
 #[cfg(test)]
 use crate::*;
 #[cfg(not(test))]
+#[allow(clippy::wildcard_imports)]
 use solidrs::*;
 
 // this is derived from the code at the end of
 // chapter one of the OpenSCAD wiki tutoril
 // https://en.wikibooks.org/wiki/OpenSCAD_Tutorial/Chapter_1
 
+#[must_use]
 pub fn render() -> String {
     let mut car = cube(60, 20, 10).center();
     car += cube(30, 20, 10).center().translate(5, 0, 10. - 0.001);
