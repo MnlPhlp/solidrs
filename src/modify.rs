@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     element::InnerElement,
     var::{Arg, Val},
@@ -55,18 +53,18 @@ impl InnerElement {
 
 fn margin_cube(x: Val, y: Val, z: Val, centered: bool, margin: Val) -> InnerElement {
     let cube = InnerElement::Cube {
-        x: Val::Calc(Arc::new(x + margin.clone() * 2)),
-        y: Val::Calc(Arc::new(y + margin.clone() * 2)),
-        z: Val::Calc(Arc::new(z + margin.clone() * 2)),
+        x: Val::Calc(x + margin.clone() * 2),
+        y: Val::Calc(y + margin.clone() * 2),
+        z: Val::Calc(z + margin.clone() * 2),
         centered,
     };
     if centered {
         cube
     } else {
         InnerElement::Translate {
-            x: Val::Calc(Arc::new(-margin.clone())),
-            y: Val::Calc(Arc::new(-margin.clone())),
-            z: Val::Calc(Arc::new(-margin)),
+            x: Val::Calc(-margin.clone()),
+            y: Val::Calc(-margin.clone()),
+            z: Val::Calc(-margin),
             child: Box::new(cube),
         }
     }

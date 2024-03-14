@@ -221,9 +221,9 @@ fn add_vars(map: &mut HashMap<&str, Var>, vars: &[&Val]) {
         }
         if let Val::Calc(calc) = var {
             match calc.op {
-                CalcOp::Neg => add_vars(map, &[&calc.a.into()]),
+                CalcOp::Neg => add_vars(map, &[&calc.a]),
                 CalcOp::Add | CalcOp::Sub | CalcOp::Mul | CalcOp::Div => {
-                    add_vars(map, &[&calc.a.into(), &calc.b.into()]);
+                    add_vars(map, &[&calc.a, &calc.b]);
                 }
             }
         }

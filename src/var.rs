@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::calc::Calc;
 
 #[macro_export]
@@ -39,7 +37,7 @@ impl Arg for Val {
 }
 impl Arg for Calc {
     fn val(self) -> Val {
-        Val::Calc(Arc::new(self))
+        Val::Calc(self)
     }
 }
 impl Arg for f32 {
@@ -103,7 +101,7 @@ impl Var {
 pub enum Val {
     Val(f32),
     Var(Var),
-    Calc(Arc<Calc>),
+    Calc(Calc),
 }
 impl std::fmt::Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
