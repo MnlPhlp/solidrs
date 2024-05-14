@@ -1,4 +1,4 @@
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 
 use crate::Val;
 
@@ -14,8 +14,8 @@ pub enum CalcOp {
 #[derive(Clone)]
 pub struct Calc {
     pub op: CalcOp,
-    pub a: Arc<Val>,
-    pub b: Arc<Val>,
+    pub a: Box<Val>,
+    pub b: Box<Val>,
 }
 
 impl Calc {
@@ -23,7 +23,7 @@ impl Calc {
         Calc {
             op: CalcOp::Neg,
             a: val.into(),
-            b: Arc::new(Val::Val(0.)),
+            b: Box::new(Val::Val(0.)),
         }
     }
 
